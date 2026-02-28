@@ -267,11 +267,11 @@ border:1px solid #222;
     <div class="logoText">DimeX Dashboard</div>
   </div>
 
-  <div style="text-align:right;">
-    <button class="connectBtn" onclick="connectWallet()">
-      Connect Wallet
-    </button>
-  </div>
+  <div class="box">
+  <div id="detect"> wallet...</div>
+  <button onclick="connectWallet()">Connect Wallet</button>
+  <div id="result" style="margin-top:20px;color:gold;"></div>
+</div>
 
 </div>
 
@@ -1262,8 +1262,6 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
 </script>
   
 <script>
-
-let provider, signer;
 let connecting = false;
 
 // Detect wallet
