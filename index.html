@@ -834,64 +834,432 @@ async function restake(){
     disable("restakeBtn", true);
 
     if(!provider){
-      alert("C
+      alert("Connect wallet first");
+      disable("restakeBtn", false);
+      return;
+    }
 
+    const signer = provider.getSigner();
+    const user = await signer.getAddress();
 
+    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
 
+    let claimable = await c.getClaimable(user);
 
+    let amount = Number(ethers.utils.formatUnits(claimable,18));
 
+    if(amount < 5000){
+      alert("Minimum 5000 DMX required to Re-stake");
+      disable("restakeBtn", false);
+      return;
+    }
 
+    document.getElementById("status").innerHTML = "Restaking...";
 
+    let tx = await c.restake();
+    await tx.wait();
 
+    document.getElementById("status").innerHTML = "Re-stake Successful";
 
+    alert("Re-stake Successful");
 
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Full Wallet Testing</title>
+    loadData();
 
-<!-- Stable Ethers CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  }catch(e){
+    console.log(e);
+    alert(e.reason || e.message || "Restake Failed");
+  }
 
-<style>
-body{
-  background:#000;
-  color:#fff;
-  font-family:Arial;
-  text-align:center;
-  padding-top:80px;
+  disable("restakeBtn", false);
 }
-button{
-  padding:15px 30px;
-  background:gold;
-  border:none;
-  border-radius:10px;
-  font-weight:bold;
-  cursor:pointer;
-  margin-top:20px;
+
+let levelUnlockInterval;
+
+function updateLevelUnlockTimer(expiry){
+
+  if(levelUnlockInterval) clearInterval(levelUnlockInterval);
+
+  function tick(){
+
+    const now = Math.floor(Date.now()/1000);
+    const diff = Number(expiry) - now;
+
+    if(diff <= 0){
+      document.getElementById("levelUnlockRemaining").innerHTML = "Expired";
+      return;
+    }
+
+    const days = Math.floor(diff / 86400);
+
+    document.getElementById("levelUnlockRemaining").innerHTML =
+      days + " Days";
+  }
+
+  tick();
+  levelUnlockInterval = setInterval(tick,1000);
 }
-.box{
-  margin-top:30px;
-  padding:20px;
-  background:#111;
-  border-radius:12px;
-  display:inline-block;
+  
+ async function loadLivePrice(){
+  try{
+    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, provider);
+
+    const price = await c.getDMXPrice();
+    const manual = await c.manualPriceEnabled();
+
+    const formatted = ethers.utils.formatUnits(price,18) + " USDT";
+
+    // User side
+    document.getElementById("livePriceUser").innerHTML = formatted;
+    document.getElementById("priceModeUser").innerHTML =
+      manual ? "Manual" : "Pancake Live";
+
+    // Admin side
+    document.getElementById("livePriceAdmin").innerHTML = formatted;
+    document.getElementById("priceModeAdmin").innerHTML =
+      manual ? "Manual" : "Pancake Live";
+
+  }catch(e){
+    console.log(e);
+  }
+  } 
+
+/* ================= ADMIN FUNCTIONS ================= */
+
+async function pauseStaking(){
+  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
+  await (await c.pauseStaking()).wait();
+  alert("Staking Paused");
 }
-</style>
-</head>
 
-<body>
+async function unpauseStaking(){
+  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
+  await (await c.unpauseStaking()).wait();
+  alert("Staking Unpaused");
+}
 
-<h2>🚀 Universal Wallet Test</h2>
+/* ===== PLAN RATE CONTROL ===== */
 
-<div class="box">
-  <div id="detect">Checking wallet...</div>
-  <button onclick="connectWallet()">Connect Wallet</button>
-  <div id="result" style="margin-top:20px;color:gold;"></div>
-</div>
+async function updatePlanRate(days){
+  const percent = document.getElementById("rateInput"+days).value;
+  if(!percent) return alert("Enter percent");
 
+  const duration = days * 86400;
+  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
+
+  await (await c.setRewardRate(duration, percent)).wait();
+
+  alert(days + " Days Rate Updated");
+  loadRates();
+}
+
+async function loadRates(){
+  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, provider);
+
+  const r90 = await c.rewardRates(90*86400);
+  const r180 = await c.rewardRates(180*86400);
+  const r365 = await c.rewardRates(365*86400);
+
+  const p90 = (r90/100).toFixed(2);
+  const p180 = (r180/100).toFixed(2);
+  const p365 = (r365/100).toFixed(2);
+
+  // Admin display
+  document.getElementById("rate90").innerHTML = p90 + " %";
+  document.getElementById("rate180").innerHTML = p180 + " %";
+  document.getElementById("rate365").innerHTML = p365 + " %";
+
+  // Stake dropdown auto update
+  document.querySelector('#duration option[value="90"]').text =
+    "90 Days - " + p90 + "% Daily";
+
+  document.querySelector('#duration option[value="180"]').text =
+    "180 Days - " + p180 + "% Daily";
+
+  document.querySelector('#duration option[value="365"]').text =
+    "365 Days - " + p365 + "% Daily";
+}
+
+/* ===== MINIMUM ===== */
+
+async function updateMinUSDT(){
+  const val = document.getElementById("minUSDT").value;
+  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
+  await (await c.setMinimumUSDT(ethers.utils.parseUnits(val,18))).wait();
+  alert("USDT Minimum Updated");
+}
+
+async function updateMinDMX(){
+  const val = document.getElementById("minDMX").value;
+  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
+  await (await c.setMinimumDMX(ethers.utils.parseUnits(val,18))).wait();
+  alert("DMX Minimum Updated");
+}
+
+/* ===== EMERGENCY ===== */
+
+async function emergencyWithdraw(){
+  const tokenType = document.getElementById("withdrawToken").value;
+  const amt = document.getElementById("withdrawAmount").value;
+  const tokenAddress = tokenType==="USDT"?USDT:DMX;
+
+  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
+
+  await (await c.emergencyWithdrawToken(
+    tokenAddress,
+    ethers.utils.parseUnits(amt,18)
+  )).wait();
+
+  alert("Withdraw Completed");
+}
+
+/* ===== TREASURY ===== */
+
+async function updateTreasury(){
+  const addr = document.getElementById("newTreasury").value;
+  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
+  await (await c.setTreasury(addr)).wait();
+  alert("Treasury Updated");
+}
+
+/* ===== OWNERSHIP ===== */
+
+async function transferOwner(){
+  const addr = document.getElementById("newOwner").value;
+  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
+  await (await c.transferOwnership(addr)).wait();
+  alert("Ownership Transferred");
+}
+
+/* ===== DIRECT & LEVEL ===== */
+
+async function updateDirect(){
+  const val = document.getElementById("directPercent").value;
+  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
+  await (await c.setDirectPercent(val)).wait();
+  alert("Direct Percent Updated");
+}
+
+async function updateLevel(){
+  const level = document.getElementById("levelNumber").value;
+  const percent = document.getElementById("levelPercent").value;
+  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
+  await (await c.setLevelPercent(level, percent)).wait();
+  alert("Level Percent Updated");
+}
+
+/* ===== DMX PRICE ===== */
+
+async function togglePriceMode(){
+
+  const mode =
+    document.getElementById("priceMode").value === "true";
+
+  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
+
+  await (await c.toggleManualPrice(mode)).wait();
+
+  alert("Price Mode Updated");
+
+  await loadLivePrice(); // 🔥 added
+}
+
+/* ================= END ADMIN ================= */
+  
+async function openDownline(){
+
+  if(!provider || !userAddress){
+    alert("Connect wallet first");
+    return;
+  }
+
+  document.getElementById("downlinePopup").style.display="flex";
+
+  try{
+
+    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, provider);
+
+    let html="";
+
+    for(let level=1; level<=25; level++){
+
+      const count = await c.getLevelCount(userAddress, level);
+
+      if(count > 0){
+
+        html += `
+        <div style="margin-top:15px;color:gold">
+          Level ${level} (Total: ${count})
+        </div>`;
+
+        const users = await c.getLevelUsers(userAddress, level);
+
+        users.forEach(u => {
+
+          const wallet = u[0];
+          const amount = ethers.utils.formatUnits(u[1],18);
+          const date = new Date(Number(u[2]) * 1000).toLocaleString();
+
+          html += `
+          <div style="border-bottom:1px solid #333;padding:8px 0">
+            <small>${wallet}</small><br>
+            Stake: ${amount} DMX<br>
+            Joined: ${date}
+          </div>`;
+        });
+      }
+    }
+
+    document.getElementById("downlineData").innerHTML =
+      html || "No downline history found.";
+
+  }catch(e){
+
+    console.log(e);
+
+    document.getElementById("downlineData").innerHTML =
+      "Unable to load downline history.";
+
+  }
+}
+  
+async function openHistory(){
+
+  if(!provider || !userAddress){
+    alert("Connect wallet first");
+    return;
+  }
+
+  document.getElementById("historyPopup").style.display="flex";
+
+  try{
+
+    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, provider);
+
+    const filter = c.filters.Claimed(userAddress);
+
+    const events = await c.queryFilter(filter);
+
+    let html = "";
+
+    if(events.length === 0){
+      html = "No claim history found";
+    }else{
+
+      events.reverse().forEach(e=>{
+
+        const amount =
+          ethers.utils.formatUnits(e.args.amount,18);
+
+        const timestamp = Number(e.args.time);
+
+        const date =
+          new Date(timestamp * 1000).toLocaleString();
+
+        const txHash = e.transactionHash;
+
+        html += `
+        <div style="
+          border-bottom:1px solid #333;
+          padding:12px 0;
+          line-height:1.6;
+        ">
+          <strong style="color:gold;">
+            ${amount} DMX
+          </strong><br>
+
+          <small>
+            Date: ${date}
+          </small><br>
+
+          <small>
+            Tx:
+            <a href="https://bscscan.com/tx/${txHash}"
+               target="_blank"
+               style="color:#ffd700;text-decoration:none;">
+               View on BscScan
+            </a>
+          </small>
+        </div>
+        `;
+      });
+    }
+
+    document.getElementById("historyData").innerHTML = html;
+
+  }catch(e){
+
+    console.log(e);
+
+    document.getElementById("historyData").innerHTML =
+      "Unable to fetch claim history";
+
+  }
+}
+
+async function openStakeHistory(){
+
+  if(!provider || !userAddress){
+    alert("Connect wallet first");
+    return;
+  }
+
+  document.getElementById("stakeHistoryPopup").style.display="flex";
+
+  try{
+
+    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, provider);
+
+    const count = await c.getStakeCount(userAddress);
+
+    let html = "";
+
+    for(let i=0; i<count; i++){
+
+      const data = await c.getStakeInfo(userAddress, i);
+
+      const amount = ethers.utils.formatUnits(data[0],18);
+      const startDate = new Date(data[1]*1000).toLocaleDateString();
+      const expiryDate = new Date(data[2]*1000).toLocaleDateString();
+
+      html += `
+      <div style="border-bottom:1px solid #333;padding:10px 0">
+        <strong>Amount:</strong> ${amount} DMX<br>
+        <strong>Start:</strong> ${startDate}<br>
+        <strong>Expiry:</strong> ${expiryDate}
+      </div>
+      `;
+    }
+
+    document.getElementById("stakeHistoryData").innerHTML =
+      html || "No stake history found";
+
+  }catch(e){
+
+    console.log(e);
+
+    document.getElementById("stakeHistoryData").innerHTML =
+      "Contract not deployed or function not available";
+
+  }
+}
+
+function closePopup(){
+document.getElementById("downlinePopup").style.display="none";
+document.getElementById("historyPopup").style.display="none";
+document.getElementById("stakeHistoryPopup").style.display="none";  
+}
+  
+function copyRef(){
+navigator.clipboard.writeText(document.getElementById("refLink").value);
+alert("Copied");
+}
+
+function viewAddress(addr){
+if(!addr||addr.includes("PUT")) return alert("Address not set");
+window.open("https://bscscan.com/address/"+addr,"_blank");
+}
+</script>
+  
 <script>
 
 let provider, signer;
