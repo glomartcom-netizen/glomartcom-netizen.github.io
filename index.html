@@ -48,46 +48,75 @@ button{
 <script>
 
 let provider, signer;
+let connecting = false;
 
-// 🔥 Detect wallet on page load
+// Detect wallet
 window.addEventListener("load", () => {
   if(window.ethereum){
-    document.getElementById("detect").innerHTML = 
-      "✅ Wallet Injected (window.ethereum detected)";
+    document.getElementById("detect").innerHTML =
+      "✅ Wallet Detected";
   } else {
-    document.getElementById("detect").innerHTML = 
-      "❌ No Wallet Injected";
+    document.getElementById("detect").innerHTML =
+      "❌ Open inside MetaMask / Trust Wallet";
   }
 });
 
+// Handle wallet changes
+if(window.ethereum){
+
+  window.ethereum.on("accountsChanged", () => {
+    location.reload();
+  });
+
+  window.ethereum.on("chainChanged", () => {
+    location.reload();
+  });
+
+}
+
 async function connectWallet(){
+
+  if(connecting) return;
+  connecting = true;
 
   try{
 
     if(!window.ethereum){
-      alert("Wallet not detected.\n\nOpen this site inside MetaMask or Trust Wallet browser.");
+      alert("Open inside MetaMask / Trust Wallet browser");
+      connecting = false;
       return;
     }
 
-    // Request account
-    await window.ethereum.request({
-      method:"eth_requestAccounts"
+    // Request Account
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts"
     });
 
     provider = new ethers.providers.Web3Provider(window.ethereum);
     signer = provider.getSigner();
 
-    const address = await signer.getAddress();
     const network = await provider.getNetwork();
 
+    // Auto switch to BSC
+    if(network.chainId !== 56){
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0x38" }]
+      });
+    }
+
+    const address = accounts[0];
+
     document.getElementById("result").innerHTML =
-      "Connected Address:<br>" + address +
-      "<br><br>Chain ID: " + network.chainId;
+      "Connected:<br>" + address +
+      "<br><br>Network: BSC Mainnet (56)";
 
   }catch(err){
     alert("Connection Failed: " + err.message);
     console.log(err);
   }
+
+  connecting = false;
 }
 
 </script>
