@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Wallet Testing</title>
+
+<!-- Stable Ethers CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+<style>
+body{
+  background:#000;
+  color:#fff;
+  font-family:Arial;
+  text-align:center;
+  padding-top:80px;
+}
+button{
+  padding:15px 30px;
+  background:gold;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:20px;
+}
+.box{
+  margin-top:30px;
+  padding:20px;
+  background:#111;
+  border-radius:12px;
+  display:inline-block;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🚀 Universal Wallet Test</h2>
+
+<div class="box">
+  <div id="detect">Checking wallet...</div>
+  <button onclick="connectWallet()">Connect Wallet</button>
+  <div id="result" style="margin-top:20px;color:gold;"></div>
+</div>
+
+<script>
+
+let provider, signer;
+
+// 🔥 Detect wallet on page load
+window.addEventListener("load", () => {
+  if(window.ethereum){
+    document.getElementById("detect").innerHTML = 
+      "✅ Wallet Injected (window.ethereum detected)";
+  } else {
+    document.getElementById("detect").innerHTML = 
+      "❌ No Wallet Injected";
+  }
+});
+
+async function connectWallet(){
+
+  try{
+
+    if(!window.ethereum){
+      alert("Wallet not detected.\n\nOpen this site inside MetaMask or Trust Wallet browser.");
+      return;
+    }
+
+    // Request account
+    await window.ethereum.request({
+      method:"eth_requestAccounts"
+    });
+
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    signer = provider.getSigner();
+
+    const address = await signer.getAddress();
+    const network = await provider.getNetwork();
+
+    document.getElementById("result").innerHTML =
+      "Connected Address:<br>" + address +
+      "<br><br>Chain ID: " + network.chainId;
+
+  }catch(err){
+    alert("Connection Failed: " + err.message);
+    console.log(err);
+  }
+}
+
+</script>
+
+</body>
+</html>
