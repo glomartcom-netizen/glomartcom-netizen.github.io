@@ -1345,68 +1345,63 @@ let provider
 let signer  
 let userAddress  
   
-modal.subscribe(async (state) => {  
-  
-  if (!state?.address) return  
-  
-  const walletProvider = await modal.getProvider()  
-  
+modal.subscribe(async (state) => {
+
+  if (!state?.address) return
+
+  const walletProvider = await modal.getProvider()
+
   window.provider = new ethers.providers.Web3Provider(walletProvider)
   window.signer = window.provider.getSigner()
   window.userAddress = state.address
-  
-  // Referral  
-  const refInput = document.getElementById("refLink")  
-  if (refInput) {  
-    refInput.value =  
-      window.location.origin + "?ref=" + userAddress  
-  }  
-  
-  // ===== ADMIN CHECK =====
-const adminPanel = document.getElementById("adminPanel");
 
-if (
-  window.ADMIN &&
-  window.userAddress &&
-  window.userAddress.trim().toLowerCase() === window.ADMIN.trim().toLowerCase()
-) {
-  if (adminPanel) {
-    adminPanel.style.display = "block";
+  // Referral
+  const refInput = document.getElementById("refLink")
+  if (refInput) {
+    refInput.value =
+      window.location.origin + "?ref=" + window.userAddress
   }
-} else {
-  if (adminPanel) {
-    adminPanel.style.display = "none";
+
+  // ===== ADMIN CHECK =====
+  const adminPanel = document.getElementById("adminPanel")
+
+  if (
+    window.ADMIN &&
+    window.userAddress &&
+    window.userAddress.trim().toLowerCase() ===
+    window.ADMIN.trim().toLowerCase()
+  ) {
+    if (adminPanel) adminPanel.style.display = "block"
+  } else {
+    if (adminPanel) adminPanel.style.display = "none"
   }
-}
-}
-  
-  // Load  
-  if(typeof loadData === "function"){    
-  
-    setTimeout(async () => {    
-  
-      await loadData()  
-  
-      if(typeof loadLivePrice === "function"){    
-        await loadLivePrice()    
-      }  
-  
-      if(typeof loadRates === "function"){    
-        await loadRates()    
-      }  
-  
-      setInterval(() => {    
-        if(userAddress){    
-          loadData()    
-          loadLivePrice()    
-        }    
-      }, 30000)  
-  
-    }, 800)  
-  
-  }  
-  
-})  
+
+  // ===== LOAD DATA =====
+  if (typeof loadData === "function") {
+
+    setTimeout(async () => {
+
+      await loadData()
+
+      if (typeof loadLivePrice === "function") {
+        await loadLivePrice()
+      }
+
+      if (typeof loadRates === "function") {
+        await loadRates()
+      }
+
+      setInterval(() => {
+        if (window.userAddress) {
+          loadData()
+          loadLivePrice()
+        }
+      }, 30000)
+
+    }, 800)
+  }
+
+})
   
 </script>
 
