@@ -1264,18 +1264,6 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
 <script>
 let connecting = false;
 
-// Detect wallet
-window.addEventListener("load", () => {
-  if(window.ethereum){
-    document.getElementById("detect").innerHTML =
-      "✅ Wallet Detected";
-  } else {
-    document.getElementById("detect").innerHTML =
-      "❌ Open inside MetaMask / Trust Wallet";
-  }
-});
-
-// Handle wallet changes
 if(window.ethereum){
 
   window.ethereum.on("accountsChanged", () => {
@@ -1344,12 +1332,30 @@ if(typeof ADMIN !== "undefined"){
   }
 }
 
-// Load dashboard data
-if(typeof loadData === "function"){
-  setTimeout(async () => {
-    await loadData();
-  }, 800);
-  }
+// ✅ SAFE LOADING BLOCK
+    if(typeof loadData === "function"){
+      setTimeout(async () => {
+        await loadData();
+
+        if(typeof loadLivePrice === "function"){
+          await loadLivePrice();
+        }
+
+        if(typeof loadRates === "function"){
+          await loadRates();
+        }
+
+        // 🔄 Auto refresh every 10 sec
+        setInterval(() => {
+          if(userAddress){
+            loadData();
+            loadLivePrice();
+          }
+        }, 10000);
+
+      }, 800);
+
+    }
   
   }catch(err){
     alert("Connection Failed: " + err.message);
