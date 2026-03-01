@@ -268,9 +268,12 @@ border:1px solid #222;
   </div>
 
   <div class="box">
-  <button onclick="connectWallet()">Connect Wallet</button>
-  <div id="result" style="margin-top:20px;color:gold;"></div>
-</div>
+<div class onclick="openConnectModal()">Connect Wallet</button>  
+</nav>  
+  
+<div style="text-align:center;margin-top:50px;">  
+  <appkit-button></appkit-button>  
+</div>  
 
 </div>
 
@@ -1304,111 +1307,104 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
 }
 </script>
   
-<script>
-let connecting = false;
-
-if(window.ethereum){
-
-  window.ethereum.on("accountsChanged", () => {
-    location.reload();
-  });
-
-  window.ethereum.on("chainChanged", () => {
-    location.reload();
-  });
-
-}
-
-async function connectWallet(){
-
-  if(connecting) return;
-  connecting = true;
-
-  try{
-
-    if(!window.ethereum){
-      alert("Open inside MetaMask / Trust Wallet browser");
-      connecting = false;
-      return;
-    }
-
-    // Request Account
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts"
-    });
-
-    provider = new ethers.providers.Web3Provider(window.ethereum);
-    signer = provider.getSigner();
-
-    const network = await provider.getNetwork();
-
-    // Auto switch to BSC
-    if(network.chainId !== 56){
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0x38" }]
-      });
-    }
-
-    userAddress = accounts[0];
-
-document.getElementById("walletDisplay").innerHTML =
-  "Connected: " +
-  userAddress.slice(0,6) + "..." +
-  userAddress.slice(-4) +
-  "<br><br>Network: BSC Mainnet (56)";
-
-// ===== ADD BELOW ONLY =====
-
-// Referral link
-if(document.getElementById("refLink")){
-  document.getElementById("refLink").value =
-    window.location.origin + "?ref=" + userAddress;
-}
-
-// Show Admin Panel
-if(typeof ADMIN !== "undefined"){
-  if(userAddress.toLowerCase() === ADMIN.toLowerCase()){
-    if(document.getElementById("adminPanel")){
-      document.getElementById("adminPanel").style.display = "block";
-    }
-  }
-}
-
-// ✅ SAFE LOADING BLOCK
-    if(typeof loadData === "function"){
-      setTimeout(async () => {
-        await loadData();
-
-        if(typeof loadLivePrice === "function"){
-          await loadLivePrice();
-        }
-
-        if(typeof loadRates === "function"){
-          await loadRates();
-        }
-
-        // 🔄 Auto refresh every 30 sec
-        setInterval(() => {
-          if(userAddress){
-            loadData();
-            loadLivePrice();
-          }
-        }, 30000);
-
-      }, 800);
-
-    }
+<script type="module">  
   
-  }catch(err){
-    alert("Connection Failed: " + err.message);
-    console.log(err);
-  }
-
-  connecting = false;
-}
-
-</script>
+import { createAppKit } from 'https://esm.sh/@reown/appkit'  
+import { Ethers5Adapter } from 'https://esm.sh/@reown/appkit-adapter-ethers5'  
+import { bsc } from 'https://esm.sh/@reown/appkit/networks'  
+import { ethers } from 'https://esm.sh/ethers@5.7.2'  
+  
+const projectId = 'f9471d926852cbae4eb35a8b39c69bf9'  
+  
+const metadata = {  
+  name: 'DimeX Staking',  
+  description: 'DimeX Staking Protocol',  
+  url: window.location.origin,  
+  icons: ['https://your-website.com/logo.png']  
+}  
+  
+const modal = createAppKit({  
+  adapters: [new Ethers5Adapter()],  
+  networks: [bsc],  
+  metadata,  
+  projectId,  
+  features: { analytics: true }  
+})  
+  
+window.openConnectModal = () => modal.open()  
+  
+// ===== CONNECT TO DASHBOARD =====  
+  
+let provider  
+let signer  
+let userAddress  
+  
+modal.subscribe(async (state) => {  
+  
+  if (!state?.address) return  
+  
+  const walletProvider = await modal.getProvider()  
+  
+  provider = new ethers.providers.Web3Provider(walletProvider)  
+  signer = provider.getSigner()  
+  userAddress = state.address  
+  
+  // Referral  
+  const refInput = document.getElementById("refLink")  
+  if (refInput) {  
+    refInput.value =  
+      window.location.origin + "?ref=" + userAddress  
+  }  
+  
+  // Admin  
+  if (typeof ADMIN !== "undefined") {  
+    if (userAddress.toLowerCase() === ADMIN.toLowerCase()) {  
+      const adminPanel = document.getElementById("adminPanel")  
+      if (adminPanel) adminPanel.style.display = "block"  
+    }  
+  }  
+  
+  // Load  
+  if(typeof loadData === "function"){    
+  
+    setTimeout(async () => {    
+  
+      await loadData()  
+  
+      if(typeof loadLivePrice === "function"){    
+        await loadLivePrice()    
+      }  
+  
+      if(typeof loadRates === "function"){    
+        await loadRates()    
+      }  
+  
+      setInterval(() => {    
+        if(userAddress){    
+          loadData()    
+          loadLivePrice()    
+        }    
+      }, 30000)  
+  
+    }, 800)  
+  
+  }  
+  
+})  
+  
+</script>  
+  
+<style>  
+.connect-btn {  
+  background-color: #f1b80d;  
+  color: black;  
+  padding: 12px 24px;  
+  border: none;  
+  border-radius: 10px;  
+  font-weight: bold;  
+  cursor: pointer;  
+}  
+</style> 
 
 </body>
 </html>
