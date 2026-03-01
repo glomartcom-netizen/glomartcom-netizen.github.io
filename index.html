@@ -348,9 +348,28 @@ function disable(id,state){document.getElementById(id).disabled=state;}
 function seconds(d){return Number(d)*86400;}
   
   
-async function loadData(){
-try{
+// --- DATA LOADING & 4X CAP ---
+async function loadData() {
+    if (!window.userAddress || !window.provider) return;
+    try {
+        const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, window.provider);
+        const info = await c.getUserInfo(window.userAddress);
+        
+        let staked = parseFloat(ethers.utils.formatUnits(info[0], 18));
+        let earned = parseFloat(ethers.utils.formatUnits(info[2], 18));
+        
+        // 🔥 4X INCOME CAP LOGIC
+        let cap = staked * 4;
+        document.getElementById("incomeCap").innerHTML = `${earned.toFixed(2)} / ${cap.toFixed(2)} DMX`;
 
+        if (earned >= cap && cap > 0) {
+            document.getElementById("claimBtn").disabled = true;
+            document.getElementById("claimBtn").innerText = "4X LIMIT REACHED";
+            document.getElementById("status").innerHTML = "⚠️ 400% Limit Reached. Restake to continue.";
+        } else {
+            document.getElementById("claimBtn").disabled = false;
+        }
+      
   const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, provider);
 
   const info = await c.getUserInfo(userAddress);
@@ -547,49 +566,33 @@ async function claim(){
   disable("claimBtn", false);
 }
 
-async function restake(){
-  try{
+// --- COMPLETE & FIXED DIMEX LOGIC ---
 
-    disable("restakeBtn", true);
+async function restake() {
+    try {
+        disable("restakeBtn", true);
+        if (!window.signer) return alert("Connect wallet first");
 
-    if(!provider){
-      alert("Connect wallet first");
-      disable("restakeBtn", false);
-      return;
+        const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, window.signer);
+        let claimable = await c.getClaimable(window.userAddress);
+        let amount = parseFloat(ethers.utils.formatUnits(claimable, 18));
+
+        if (amount < 5000) {
+            alert("Minimum 5000 DMX required to Re-stake");
+            disable("restakeBtn", false);
+            return;
+        }
+
+        document.getElementById("status").innerHTML = "Restaking with 5% Bonus...";
+        // This triggers the contract restake which should include the 5% incentive
+        let tx = await c.restake();
+        await tx.wait();
+        alert("Re-stake Successful! 5% Extra Bonus Added.");
+        loadData();
+    } catch (e) {
+        alert("Restake Failed: " + (e.reason || e.message));
     }
-
-    const signer = provider.getSigner();
-    const user = await signer.getAddress();
-
-    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
-
-    let claimable = await c.getClaimable(user);
-
-    let amount = Number(ethers.utils.formatUnits(claimable,18));
-
-    if(amount < 5000){
-      alert("Minimum 5000 DMX required to Re-stake");
-      disable("restakeBtn", false);
-      return;
-    }
-
-    document.getElementById("status").innerHTML = "Restaking...";
-
-    let tx = await c.restake();
-    await tx.wait();
-
-    document.getElementById("status").innerHTML = "Re-stake Successful";
-
-    alert("Re-stake Successful");
-
-    loadData();
-
-  }catch(e){
-    console.log(e);
-    alert(e.reason || e.message || "Restake Failed");
-  }
-
-  disable("restakeBtn", false);
+    disable("restakeBtn", false);
 }
 
 let levelUnlockInterval;
@@ -1022,63 +1025,9 @@ if(!addr||addr.includes("PUT")) return alert("Address not set");
 window.open("https://bscscan.com/address/"+addr,"_blank");
 }
   
-// --- YOUR DIMEX CUSTOM LOGIC ---
-async function loadData() {
-  try {
-    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, window.provider);
-    const info = await c.getUserInfo(window.userAddress);
-    const claimable = await c.getClaimable(window.userAddress);
-
-    let staked = parseFloat(ethers.utils.formatUnits(info[0], 18));
-    let earned = parseFloat(ethers.utils.formatUnits(info[2], 18));
-    
-    // 🔥 1. 4X INCOME CAP LOGIC (400%)
-    let cap = staked * 4;
-    document.getElementById("totalStake").innerHTML = staked.toFixed(2) + " DMX";
-    document.getElementById("totalEarned").innerHTML = earned.toFixed(2) + " DMX";
-    
-    // Using the 'status' or 'claimable' area to show Cap Progress
-    document.getElementById("status").innerHTML = `Income Cap: ${earned.toFixed(2)} / ${cap.toFixed(2)} DMX (4x Limit)`;
-
-    if (earned >= cap && cap > 0) {
-        document.getElementById("claimBtn").disabled = true;
-        document.getElementById("claimBtn").innerText = "CAP REACHED (4x)";
-        document.getElementById("status").innerHTML = "<span style='color:red;'>⚠️ 4x Limit Reached! Restake to continue.</span>";
-    } else {
-        document.getElementById("claimBtn").disabled = false;
-        document.getElementById("claimBtn").innerText = "Claim";
-  }
-
-// 🔥 2. RESTAKE WITH 5% BONUS
-async function restake() {
-  try {
-    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, window.signer);
-    let reward = await c.getClaimable(window.userAddress);
-    
-    if (parseFloat(ethers.utils.formatUnits(reward, 18)) < 100) {
-        return alert("Minimum 100 DMX required to restake");
-    }
-
-    document.getElementById("status").innerHTML = "Applying 5% Restake Bonus...";
-    
-    // Calls your contract restake function
-    let tx = await c.restake(); 
-    await tx.wait();
-    
-    alert("Success! 5% Extra Bonus added to your stake.");
-    loadData();
-  } catch(e) { alert("Restake Failed: " + (e.reason || e.message)); }
-}
-
-// Ensure you have your other existing functions (copyRef, etc.) below
-function copyRef() {
-    let copyText = document.getElementById("refLink");
-    copyText.select();
-    navigator.clipboard.writeText(copyText.value);
-    alert("Referral Link Copied!");
-  
 </script>
   
+<script type="module">
 <script type="module">
   import { createAppKit } from 'https://esm.run/@reown/appkit'
   import { Ethers5Adapter } from 'https://esm.run/@reown/appkit-adapter-ethers5'
@@ -1090,45 +1039,37 @@ function copyRef() {
     adapters: [new Ethers5Adapter()],
     networks: [bsc],
     metadata: { 
-      name: 'DimeX Dashboard', 
-      url: window.location.origin,
-      icons: ['https://i.ibb.co/HpqwGFqt/logo.png'] 
+        name: 'DimeX Dashboard', 
+        url: window.location.origin,
+        icons: ['https://i.ibb.co/HpqwGFqt/logo.png'] 
     },
     projectId
   })
 
-  // This fixes the "Button Not Responding" issue
-  window.connectWallet = async () => {
-    await modal.open();
-  };
+  window.connectWallet = () => modal.open();
 
-  // Syncing Reown with your Dashboard Logic
   modal.subscribeAccount(async (state) => {
-    if (state.isConnected && state.address) {
+    if (state.isConnected) {
       window.userAddress = state.address;
-      
       const walletProvider = modal.getWalletProvider();
       window.provider = new ethers.providers.Web3Provider(walletProvider);
       window.signer = window.provider.getSigner();
 
-      // Update Header
+      // UI Updates
       document.getElementById("walletDisplay").innerHTML = 
         `Connected: ${window.userAddress.slice(0,6)}...${window.userAddress.slice(-4)}<br>Network: BSC Mainnet (56)`;
 
-      // Auto-Show Admin Panel
-      if (window.userAddress.toLowerCase() === "0x53ba2d865be750d0e2d4d01bcb0a46ec1684c46b") {
-          document.getElementById("adminPanel").style.display = "block";
+      // Admin Access Check
+      if (window.userAddress.toLowerCase() === window.ADMIN.toLowerCase()) {
+          document.querySelectorAll(".adminPanel").forEach(el => el.style.display = "block");
       }
 
-      // Generate Referral Link
       document.getElementById("refLink").value = window.location.origin + "?ref=" + window.userAddress;
 
-      // Load 4x Cap & 5% Bonus Data
       loadData();
+      syncAdminRates(); // Fetch current rates for admin
     }
   });
-</script>
-
 
 </body>
 </html>
