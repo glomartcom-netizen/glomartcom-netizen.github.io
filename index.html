@@ -1031,21 +1031,25 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
   import { createAppKit } from 'https://esm.run/@reown/appkit'
   import { Ethers5Adapter } from 'https://esm.run/@reown/appkit-adapter-ethers5'
   import { bsc } from 'https://esm.run/@reown/appkit/networks'
+  import { ethers } from 'https://esm.run/ethers@5.7.2'
 
-  const projectId = 'f9471d926852cbae4eb35a8b39c69bf9'; 
+  const projectId = 'f9471d926852cbae4eb35a8b39c69bf9';
 
   const modal = createAppKit({
     adapters: [new Ethers5Adapter()],
     networks: [bsc],
     metadata: { 
-        name: 'DimeX Dashboard', 
-        url: window.location.origin,
-        icons: ['https://i.ibb.co/HpqwGFqt/logo.png'] 
+      name: 'DimeX Dashboard', 
+      url: window.location.origin,
+      icons: ['https://i.ibb.co/HpqwGFqt/logo.png']
     },
     projectId
-  })
+  });
 
-  window.connectWallet = () => modal.open();
+  // 🔥 THIS MAKES BUTTON WORK
+  window.connectWallet = async () => {
+    await modal.open();
+  };
 
   modal.subscribeAccount(async (state) => {
     if (state.isConnected && state.address) {
@@ -1059,9 +1063,10 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
       document.getElementById("walletDisplay").innerHTML = 
         `Connected: ${window.userAddress.slice(0,6)}...${window.userAddress.slice(-4)}<br>Network: BSC Mainnet (56)`;
 
+      // Admin check
       if (window.userAddress.toLowerCase() === window.ADMIN.toLowerCase()) {
-          document.querySelectorAll(".adminPanel")
-            .forEach(el => el.style.display = "block");
+        document.querySelectorAll(".adminPanel")
+          .forEach(el => el.style.display = "block");
       }
 
       document.getElementById("refLink").value =
