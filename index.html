@@ -1302,105 +1302,67 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
 }
 </script>
   
-<script type="module">  
-  
-import { createAppKit } from 'https://esm.sh/@reown/appkit'  
-import { Ethers5Adapter } from 'https://esm.sh/@reown/appkit-adapter-ethers5'  
-import { bsc } from 'https://esm.sh/@reown/appkit/networks'  
-import { ethers } from 'https://esm.sh/ethers@5.7.2'  
-  
-const projectId = 'f9471d926852cbae4eb35a8b39c69bf9'  
-  
-const metadata = {  
-  name: 'DimeX Staking',  
-  description: 'DimeX Staking Protocol',  
-  url: window.location.origin,  
-  icons: ['https://your-website.com/logo.png']  
-}  
-  
-const modal = createAppKit({  
-  adapters: [new Ethers5Adapter()],  
-  networks: [bsc],  
-  metadata,  
-  projectId,  
-  features: { analytics: true }  
-})  
+<script type="module">
+  import { createAppKit } from 'https://esm.run/@reown/appkit'
+  import { Ethers5Adapter } from 'https://esm.run/@reown/appkit-adapter-ethers5'
+  import { bsc } from 'https://esm.run/@reown/appkit/networks'
 
-// ✅ Button Click Binding – THIS IS THE CORRECT PLACE
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("connectBtn")
-  if (btn) {
-    btn.addEventListener("click", () => modal.open())
-  }
-})
-  
-window.openConnectModal = () => modal.open()  
-  
-// ===== CONNECT TO DASHBOARD =====  
-  
-let provider  
-let signer  
-let userAddress  
-  
-modal.subscribe(async (state) => {
+  const projectId = 'f9471d926852cbae4eb35a8b39c69bf9'; 
 
-  if (!state?.address) return
+  const modal = createAppKit({
+    adapters: [new Ethers5Adapter()],
+    networks: [bsc],
+    metadata: { 
+        name: 'DimeX Dashboard', 
+        url: window.location.origin,
+        icons: ['https://i.ibb.co/HpqwGFqt/logo.png'] 
+    },
+    projectId
+  })
 
-  const walletProvider = await modal.getProvider()
+  // Global access for the button
+  window.connectWallet = () => modal.open();
 
-  window.provider = new ethers.providers.Web3Provider(walletProvider)
-  window.signer = window.provider.getSigner()
-  window.userAddress = state.address
+  // 🔄 This is the "Brain" that updates your Dashboard
+  modal.subscribeAccount(async (state) => {
+    if (state.isConnected) {
+      userAddress = state.address;
+      
+      // 1. Show Wallet Address & Network in UI
+      document.getElementById("walletDisplay").innerHTML = 
+        `Connected: ${userAddress.slice(0,6)}...${userAddress.slice(-4)}<br>` +
+        `Network: BSC Mainnet (56)`;
 
-  // Referral
-  const refInput = document.getElementById("refLink")
-  if (refInput) {
-    refInput.value =
-      window.location.origin + "?ref=" + window.userAddress
-  }
-
-  // ===== ADMIN CHECK =====
-  const adminPanel = document.getElementById("adminPanel")
-
-  if (
-    window.ADMIN &&
-    window.userAddress &&
-    window.userAddress.trim().toLowerCase() ===
-    window.ADMIN.trim().toLowerCase()
-  ) {
-    if (adminPanel) adminPanel.style.display = "block"
-  } else {
-    if (adminPanel) adminPanel.style.display = "none"
-  }
-
-  // ===== LOAD DATA =====
-  if (typeof loadData === "function") {
-
-    setTimeout(async () => {
-
-      await loadData()
-
-      if (typeof loadLivePrice === "function") {
-        await loadLivePrice()
+      // 2. Check if Admin
+      if (userAddress.toLowerCase() === ADMIN.toLowerCase()) {
+          document.getElementById("adminPanel").style.display = "block";
+          console.log("Admin Dashboard Active");
+      } else {
+          document.getElementById("adminPanel").style.display = "none";
       }
 
-      if (typeof loadRates === "function") {
-        await loadRates()
+      // 3. Initialize Contract & Data
+      const walletProvider = modal.getWalletProvider();
+      if (walletProvider) {
+          provider = new ethers.providers.Web3Provider(walletProvider);
+          signer = provider.getSigner();
+          
+          // Generate Referral Link
+          document.getElementById("refLink").value = window.location.origin + "?ref=" + userAddress;
+          
+          // Initial Data Load
+          loadData();
+          loadLivePrice();
+          loadRates();
       }
-
-      setInterval(() => {
-        if (window.userAddress) {
-          loadData()
-          loadLivePrice()
-        }
-      }, 30000)
-
-    }, 800)
-  }
-
-})
-  
+    } else {
+      // Clear UI if disconnected
+      document.getElementById("walletDisplay").innerHTML = "";
+      document.getElementById("adminPanel").style.display = "none";
+    }
+  });
 </script>
+
 
 </body>
 </html>
