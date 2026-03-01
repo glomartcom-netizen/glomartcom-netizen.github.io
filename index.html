@@ -350,66 +350,62 @@ function seconds(d){return Number(d)*86400;}
   
 // --- DATA LOADING & 4X CAP ---
 async function loadData() {
-    if (!window.userAddress || !window.provider) return;
-    try {
-        const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, window.provider);
-        const info = await c.getUserInfo(window.userAddress);
-        
-        let staked = parseFloat(ethers.utils.formatUnits(info[0], 18));
-        let earned = parseFloat(ethers.utils.formatUnits(info[2], 18));
-        
-        // 🔥 4X INCOME CAP LOGIC
-        let cap = staked * 4;
-        document.getElementById("incomeCap").innerHTML = `${earned.toFixed(2)} / ${cap.toFixed(2)} DMX`;
+  if (!window.userAddress || !window.provider) return;
 
-        if (earned >= cap && cap > 0) {
-            document.getElementById("claimBtn").disabled = true;
-            document.getElementById("claimBtn").innerText = "4X LIMIT REACHED";
-            document.getElementById("status").innerHTML = "⚠️ 400% Limit Reached. Restake to continue.";
-        } else {
-            document.getElementById("claimBtn").disabled = false;
-        }
-      
-  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, provider);
+  try {
+    const contract = new ethers.Contract(
+      STAKING_ADDRESS,
+      STAKE_ABI,
+      window.provider
+    );
 
-  const info = await c.getUserInfo(userAddress);
-  const claimable = await c.getClaimable(userAddress);
+    const info = await contract.getUserInfo(window.userAddress);
+    const claimable = await contract.getClaimable(window.userAddress);
+    const directVol = await contract.directVolume(window.userAddress);
 
-  const levelUnlock = await c.getLevelUnlockExpiry(userAddress);
-updateLevelUnlockTimer(levelUnlock); // level
-  
-  // 🔥 Direct Volume
-  const directVol = await c.directVolume(userAddress);
+    let staked = parseFloat(ethers.utils.formatUnits(info[0], 18));
+    let earned = parseFloat(ethers.utils.formatUnits(info[2], 18));
 
-document.getElementById("totalStake").innerHTML =
-  ethers.utils.formatUnits(info[0],18) + " DMX";
+    let cap = staked * 4;
 
-document.getElementById("dailyReward").innerHTML =
-  ethers.utils.formatUnits(info[1],18) + " DMX";
+    document.getElementById("incomeCap").innerHTML =
+      `${earned.toFixed(2)} / ${cap.toFixed(2)} DMX`;
 
-document.getElementById("totalEarned").innerHTML =
-  ethers.utils.formatUnits(info[2],18) + " DMX";
+    document.getElementById("totalStake").innerHTML =
+      staked.toFixed(2) + " DMX";
 
-document.getElementById("directIncome").innerHTML =
-  ethers.utils.formatUnits(info[3],18) + " DMX";
+    document.getElementById("dailyReward").innerHTML =
+      ethers.utils.formatUnits(info[1], 18) + " DMX";
 
-document.getElementById("levelIncome").innerHTML =
-  ethers.utils.formatUnits(info[4],18) + " DMX";
+    document.getElementById("totalEarned").innerHTML =
+      earned.toFixed(2) + " DMX";
 
-/* 🔥 FIXED TEAM VOLUME */
-document.getElementById("teamVolume").innerHTML =
-  ethers.utils.formatUnits(info[5],18) + " DMX";
+    document.getElementById("directIncome").innerHTML =
+      ethers.utils.formatUnits(info[3], 18) + " DMX";
 
-document.getElementById("claimable").value =
-  ethers.utils.formatUnits(claimable,18) + " DMX";
+    document.getElementById("levelIncome").innerHTML =
+      ethers.utils.formatUnits(info[4], 18) + " DMX";
 
-/* Direct Volume */
-document.getElementById("directVolume").innerHTML =
-  ethers.utils.formatUnits(directVol,18) + " DMX";
+    document.getElementById("teamVolume").innerHTML =
+      ethers.utils.formatUnits(info[5], 18) + " DMX";
 
-}catch(e){
-  console.log(e);
-}
+    document.getElementById("directVolume").innerHTML =
+      ethers.utils.formatUnits(directVol, 18) + " DMX";
+
+    document.getElementById("claimable").value =
+      ethers.utils.formatUnits(claimable, 18) + " DMX";
+
+    if (earned >= cap && cap > 0) {
+      document.getElementById("claimBtn").disabled = true;
+      document.getElementById("claimBtn").innerText = "4X LIMIT REACHED";
+    } else {
+      document.getElementById("claimBtn").disabled = false;
+      document.getElementById("claimBtn").innerText = "Claim";
+    }
+
+  } catch (e) {
+    console.log("LoadData Error:", e);
+  }
 }
 
 async function approveToken(){
