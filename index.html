@@ -1328,6 +1328,14 @@ const modal = createAppKit({
   projectId,  
   features: { analytics: true }  
 })  
+
+// ✅ Button Click Binding – THIS IS THE CORRECT PLACE
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("connectBtn")
+  if (btn) {
+    btn.addEventListener("click", () => modal.open())
+  }
+})
   
 window.openConnectModal = () => modal.open()  
   
@@ -1390,7 +1398,7 @@ modal.subscribe(async (state) => {
   
 })  
   
-</style> 
+</script>
 
 </body>
 </html>
