@@ -1319,12 +1319,38 @@ async function connectWallet(){
       });
     }
 
-    const address = accounts[0];
+    userAddress = accounts[0];
 
-    document.getElementById("result").innerHTML =
-      "Connected:<br>" + address +
-      "<br><br>Network: BSC Mainnet (56)";
+document.getElementById("walletDisplay").innerHTML =
+  "Connected: " +
+  userAddress.slice(0,6) + "..." +
+  userAddress.slice(-4) +
+  "<br><br>Network: BSC Mainnet (56)";
 
+// ===== ADD BELOW ONLY =====
+
+// Referral link
+if(document.getElementById("refLink")){
+  document.getElementById("refLink").value =
+    window.location.origin + "?ref=" + userAddress;
+}
+
+// Show Admin Panel
+if(typeof ADMIN !== "undefined"){
+  if(userAddress.toLowerCase() === ADMIN.toLowerCase()){
+    if(document.getElementById("adminPanel")){
+      document.getElementById("adminPanel").style.display = "block";
+    }
+  }
+}
+
+// Load dashboard data
+if(typeof loadData === "function"){
+  setTimeout(async () => {
+    await loadData();
+  }, 800);
+  }
+  
   }catch(err){
     alert("Connection Failed: " + err.message);
     console.log(err);
