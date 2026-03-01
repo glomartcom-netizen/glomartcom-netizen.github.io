@@ -554,7 +554,7 @@ Mode:
 <script>
 let provider, signer, userAddress;
   
-window.ADMIN="0x53ba2d865be750d0e2d4d01bcb0a46ec1684c46b";
+const ADMIN="0x53ba2d865be750d0e2d4d01bcb0a46ec1684c46b";
 const USDT="0x55d398326f99059fF775485246999027B3197955";
 const DMX="PUT_DMX_TOKEN";
 const STAKING_ADDRESS="PUT_STAKING_CONTRACT";
@@ -1362,12 +1362,11 @@ modal.subscribe(async (state) => {
       window.location.origin + "?ref=" + userAddress  
   }  
   
-  // Admin
-if (window.ADMIN) {
-  if (userAddress.toLowerCase() === window.ADMIN.toLowerCase()) {
-    const adminPanel = document.getElementById("adminPanel")
-    if (adminPanel) {
-      adminPanel.style.display = "block"
+  // Show Admin Panel
+if(typeof ADMIN !== "undefined"){
+  if(userAddress.toLowerCase() === ADMIN.toLowerCase()){
+    if(document.getElementById("adminPanel")){
+      document.getElementById("adminPanel").style.display = "block";
     }
   }
 }
