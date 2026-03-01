@@ -1021,46 +1021,44 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
   import { createAppKit } from 'https://esm.run/@reown/appkit'
   import { Ethers5Adapter } from 'https://esm.run/@reown/appkit-adapter-ethers5'
   import { bsc } from 'https://esm.run/@reown/appkit/networks'
-
-  const projectId = 'f9471d926852cbae4eb35a8b39c69bf9';
+  import { ethers } from 'https://esm.run/ethers@5.7.2'
 
   const modal = createAppKit({
     adapters: [new Ethers5Adapter()],
     networks: [bsc],
-    metadata: { 
+    metadata: {
       name: 'DimeX Dashboard',
       url: window.location.origin,
       icons: ['https://i.ibb.co/HpqwGFqt/logo.png']
     },
-    projectId
+    projectId: 'f9471d926852cbae4eb35a8b39c69bf9'
   });
 
   window.connectWallet = async () => {
     await modal.open();
   };
 
-  modal.subscribeAccount(async (state) => {
-    if (state.isConnected && state.address) {
+  modal.subscribe(async (state) => {
+    if (!state?.address) return;
 
-      window.userAddress = state.address;
+    window.userAddress = state.address;
 
-      const walletProvider = modal.getWalletProvider();
-      window.provider = new ethers.providers.Web3Provider(walletProvider);
-      window.signer = window.provider.getSigner();
+    const walletProvider = await modal.getProvider();
+    window.provider = new ethers.providers.Web3Provider(walletProvider);
+    window.signer = window.provider.getSigner();
 
-      document.getElementById("walletDisplay").innerHTML = 
-        `Connected: ${window.userAddress.slice(0,6)}...${window.userAddress.slice(-4)}<br>Network: BSC Mainnet (56)`;
+    document.getElementById("walletDisplay").innerHTML =
+      `Connected: ${window.userAddress.slice(0,6)}...${window.userAddress.slice(-4)}<br>Network: BSC Mainnet (56)`;
 
-      if (window.userAddress.toLowerCase() === window.ADMIN.toLowerCase()) {
-        document.querySelectorAll(".adminPanel")
-          .forEach(el => el.style.display = "block");
-      }
-
-      document.getElementById("refLink").value =
-        window.location.origin + "?ref=" + window.userAddress;
-
-      loadData();
+    if (window.userAddress.toLowerCase() === window.ADMIN.toLowerCase()) {
+      document.querySelectorAll(".adminPanel")
+        .forEach(el => el.style.display = "block");
     }
+
+    document.getElementById("refLink").value =
+      window.location.origin + "?ref=" + window.userAddress;
+
+    loadData();
   });
 </script>
 
