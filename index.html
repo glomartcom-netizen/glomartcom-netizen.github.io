@@ -1026,8 +1026,7 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
 }
   
 </script>
-  
-<script type="module">
+
 <script type="module">
   import { createAppKit } from 'https://esm.run/@reown/appkit'
   import { Ethers5Adapter } from 'https://esm.run/@reown/appkit-adapter-ethers5'
@@ -1049,27 +1048,30 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
   window.connectWallet = () => modal.open();
 
   modal.subscribeAccount(async (state) => {
-    if (state.isConnected) {
+    if (state.isConnected && state.address) {
+
       window.userAddress = state.address;
+
       const walletProvider = modal.getWalletProvider();
       window.provider = new ethers.providers.Web3Provider(walletProvider);
       window.signer = window.provider.getSigner();
 
-      // UI Updates
       document.getElementById("walletDisplay").innerHTML = 
         `Connected: ${window.userAddress.slice(0,6)}...${window.userAddress.slice(-4)}<br>Network: BSC Mainnet (56)`;
 
-      // Admin Access Check
       if (window.userAddress.toLowerCase() === window.ADMIN.toLowerCase()) {
-          document.querySelectorAll(".adminPanel").forEach(el => el.style.display = "block");
+          document.querySelectorAll(".adminPanel")
+            .forEach(el => el.style.display = "block");
       }
 
-      document.getElementById("refLink").value = window.location.origin + "?ref=" + window.userAddress;
+      document.getElementById("refLink").value =
+        window.location.origin + "?ref=" + window.userAddress;
 
       loadData();
-      syncAdminRates(); // Fetch current rates for admin
     }
   });
+
+</script>
 
 </body>
 </html>
