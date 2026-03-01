@@ -1388,13 +1388,13 @@ if(typeof ADMIN !== "undefined"){
           await loadRates();
         }
 
-        // 🔄 Auto refresh every 10 sec
+        // 🔄 Auto refresh every 30 sec
         setInterval(() => {
           if(userAddress){
             loadData();
             loadLivePrice();
           }
-        }, 10000);
+        }, 30000);
 
       }, 800);
 
