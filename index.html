@@ -1049,18 +1049,62 @@ async function updateLevel(){
 
 /* ===== DMX PRICE ===== */
 
+async function setManualPrice(){
+
+  try{
+
+    if(!signer){
+      alert("Connect Admin Wallet First");
+      return;
+    }
+
+    const price = document.getElementById("manualPrice").value;
+
+    if(!price || isNaN(price) || Number(price) <= 0){
+      alert("Enter Valid Price");
+      return;
+    }
+
+    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
+
+    await (await c.setManualPrice(
+      ethers.utils.parseUnits(price,18)
+    )).wait();
+
+    alert("Manual Price Updated");
+
+    await loadLivePrice();
+
+  }catch(e){
+    console.log(e);
+    alert(e.reason || e.message || "Manual Price Failed");
+  }
+}
+
 async function togglePriceMode(){
 
-  const mode =
-    document.getElementById("priceMode").value === "true";
+  try{
 
-  const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
+    if(!signer){
+      alert("Connect Admin Wallet First");
+      return;
+    }
 
-  await (await c.toggleManualPrice(mode)).wait();
+    const mode =
+      document.getElementById("priceMode").value === "true";
 
-  alert("Price Mode Updated");
+    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
 
-  await loadLivePrice(); // 🔥 added
+    await (await c.toggleManualPrice(mode)).wait();
+
+    alert("Price Mode Updated");
+
+    await loadLivePrice();
+
+  }catch(e){
+    console.log(e);
+    alert(e.reason || e.message || "Price Mode Failed");
+  }
 }
 
 /* ================= END ADMIN ================= */
