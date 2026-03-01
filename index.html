@@ -1301,6 +1301,62 @@ function viewAddress(addr){
 if(!addr||addr.includes("PUT")) return alert("Address not set");
 window.open("https://bscscan.com/address/"+addr,"_blank");
 }
+  
+// --- YOUR DIMEX CUSTOM LOGIC ---
+async function loadData() {
+  try {
+    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, window.provider);
+    const info = await c.getUserInfo(window.userAddress);
+    const claimable = await c.getClaimable(window.userAddress);
+
+    let staked = parseFloat(ethers.utils.formatUnits(info[0], 18));
+    let earned = parseFloat(ethers.utils.formatUnits(info[2], 18));
+    
+    // 🔥 1. 4X INCOME CAP LOGIC (400%)
+    let cap = staked * 4;
+    document.getElementById("totalStake").innerHTML = staked.toFixed(2) + " DMX";
+    document.getElementById("totalEarned").innerHTML = earned.toFixed(2) + " DMX";
+    
+    // Using the 'status' or 'claimable' area to show Cap Progress
+    document.getElementById("status").innerHTML = `Income Cap: ${earned.toFixed(2)} / ${cap.toFixed(2)} DMX (4x Limit)`;
+
+    if (earned >= cap && cap > 0) {
+        document.getElementById("claimBtn").disabled = true;
+        document.getElementById("claimBtn").innerText = "CAP REACHED (4x)";
+        document.getElementById("status").innerHTML = "<span style='color:red;'>⚠️ 4x Limit Reached! Restake to continue.</span>";
+    } else {
+        document.getElementById("claimBtn").disabled = false;
+        document.getElementById("claimBtn").innerText = "Claim";
+  }
+
+// 🔥 2. RESTAKE WITH 5% BONUS
+async function restake() {
+  try {
+    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, window.signer);
+    let reward = await c.getClaimable(window.userAddress);
+    
+    if (parseFloat(ethers.utils.formatUnits(reward, 18)) < 100) {
+        return alert("Minimum 100 DMX required to restake");
+    }
+
+    document.getElementById("status").innerHTML = "Applying 5% Restake Bonus...";
+    
+    // Calls your contract restake function
+    let tx = await c.restake(); 
+    await tx.wait();
+    
+    alert("Success! 5% Extra Bonus added to your stake.");
+    loadData();
+  } catch(e) { alert("Restake Failed: " + (e.reason || e.message)); }
+}
+
+// Ensure you have your other existing functions (copyRef, etc.) below
+function copyRef() {
+    let copyText = document.getElementById("refLink");
+    copyText.select();
+    navigator.clipboard.writeText(copyText.value);
+    alert("Referral Link Copied!");
+  
 </script>
   
 <script type="module">
@@ -1308,42 +1364,47 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
   import { Ethers5Adapter } from 'https://esm.run/@reown/appkit-adapter-ethers5'
   import { bsc } from 'https://esm.run/@reown/appkit/networks'
 
-  // 1. Universal Setup
-  const projectId = 'f9471d926852cbae4eb35a8b39c69bf9'; 
+  const projectId = 'f9471d926852cbae4eb35a8b39c69bf9'; // Reown Project ID
+
   const modal = createAppKit({
     adapters: [new Ethers5Adapter()],
     networks: [bsc],
-    metadata: { name: 'DimeX', url: window.location.origin },
+    metadata: { 
+      name: 'DimeX Dashboard', 
+      url: window.location.origin,
+      icons: ['https://i.ibb.co/HpqwGFqt/logo.png'] 
+    },
     projectId
   })
 
+  // Attach connection to the button
   window.connectWallet = () => modal.open();
 
-  // 2. Listen for Connection
+  // 🔄 Sync Wallet with Dashboard Logic
   modal.subscribeAccount(async (state) => {
     if (state.isConnected) {
-      userAddress = state.address;
+      window.userAddress = state.address;
       
       // Update UI Header
       document.getElementById("walletDisplay").innerHTML = 
-        `Connected: ${userAddress.slice(0,6)}...${userAddress.slice(-4)}<br>Network: BSC Mainnet (56)`;
+        `Connected: ${window.userAddress.slice(0,6)}...${window.userAddress.slice(-4)}<br>` +
+        `Network: BSC Mainnet (56)`;
 
-      // Handle Admin Panel
-      if (typeof ADMIN !== "undefined" && userAddress.toLowerCase() === ADMIN.toLowerCase()) {
+      // Show Admin Panel if Address matches
+      if (typeof ADMIN !== "undefined" && window.userAddress.toLowerCase() === ADMIN.toLowerCase()) {
           document.getElementById("adminPanel").style.display = "block";
       }
 
-      // 🔄 GET THE UNIVERSAL PROVIDER (This fixes the "Not Responding" issue)
+      // Initialize Ethers
       const walletProvider = modal.getWalletProvider();
-      provider = new ethers.providers.Web3Provider(walletProvider);
-      signer = provider.getSigner();
+      window.provider = new ethers.providers.Web3Provider(walletProvider);
+      window.signer = window.provider.getSigner();
       
-      // Generate Referral Link
-      if(document.getElementById("refLink")) {
-        document.getElementById("refLink").value = window.location.origin + "?ref=" + userAddress;
-      }
+      // Set Referral Link
+      document.getElementById("refLink").value = window.location.origin + "?ref=" + window.userAddress;
 
-      loadData(); // Run the 4x Cap check
+      // Start Loading Data
+      loadData();
       if(typeof loadLivePrice === "function") loadLivePrice();
     }
   });
