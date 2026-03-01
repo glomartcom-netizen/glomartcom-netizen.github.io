@@ -1354,9 +1354,6 @@ modal.subscribe(async (state) => {
   window.provider = new ethers.providers.Web3Provider(walletProvider)
   window.signer = window.provider.getSigner()
   window.userAddress = state.address
-
-  console.log("Connected:", window.userAddress)
-  console.log("Admin:", window.ADMIN)s  
   
   // Referral  
   const refInput = document.getElementById("refLink")  
@@ -1365,15 +1362,20 @@ modal.subscribe(async (state) => {
       window.location.origin + "?ref=" + userAddress  
   }  
   
-  // Show Admin Panel
+  // ===== ADMIN CHECK =====
+const adminPanel = document.getElementById("adminPanel");
+
 if (
   window.ADMIN &&
   window.userAddress &&
-  window.userAddress.toLowerCase().trim() === window.ADMIN.toLowerCase().trim()
+  window.userAddress.trim().toLowerCase() === window.ADMIN.trim().toLowerCase()
 ) {
-  const panel = document.getElementById("adminPanel")
-  if (panel) {
-    panel.style.display = "block"
+  if (adminPanel) {
+    adminPanel.style.display = "block";
+  }
+} else {
+  if (adminPanel) {
+    adminPanel.style.display = "none";
   }
 }
 }
