@@ -267,13 +267,11 @@ border:1px solid #222;
     <div class="logoText">DimeX Dashboard</div>
   </div>
 
-  <div class="box">
-<div class onclick="openConnectModal()">Connect Wallet</button>  
-</nav>  
-  
-<div style="text-align:center;margin-top:50px;">  
-  <appkit-button></appkit-button>  
-</div>  
+  <button class="connectBtn" id="connectBtn">
+    Connect Wallet
+  </button>
+
+</div>
 
 </div>
 
@@ -1392,18 +1390,6 @@ modal.subscribe(async (state) => {
   
 })  
   
-</script>  
-  
-<style>  
-.connect-btn {  
-  background-color: #f1b80d;  
-  color: black;  
-  padding: 12px 24px;  
-  border: none;  
-  border-radius: 10px;  
-  font-weight: bold;  
-  cursor: pointer;  
-}  
 </style> 
 
 </body>
