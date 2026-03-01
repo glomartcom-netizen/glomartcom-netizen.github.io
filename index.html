@@ -630,11 +630,6 @@ function updateLevelUnlockTimer(expiry){
     document.getElementById("priceModeUser").innerHTML =
       manual ? "Manual" : "Pancake Live";
 
-    // Admin side
-    document.getElementById("livePriceAdmin").innerHTML = formatted;
-    document.getElementById("priceModeAdmin").innerHTML =
-      manual ? "Manual" : "Pancake Live";
-
   }catch(e){
     console.log(e);
   }
