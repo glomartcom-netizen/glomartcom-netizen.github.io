@@ -554,7 +554,7 @@ Mode:
 <script>
 let provider, signer, userAddress;
   
-const ADMIN="0x53ba2d865be750d0e2d4d01bcb0a46ec1684c46b";
+window.ADMIN="0x53ba2d865be750d0e2d4d01bcb0a46ec1684c46b";
 const USDT="0x55d398326f99059fF775485246999027B3197955";
 const DMX="PUT_DMX_TOKEN";
 const STAKING_ADDRESS="PUT_STAKING_CONTRACT";
@@ -1351,9 +1351,12 @@ modal.subscribe(async (state) => {
   
   const walletProvider = await modal.getProvider()  
   
-  provider = new ethers.providers.Web3Provider(walletProvider)  
-  signer = provider.getSigner()  
-  userAddress = state.address  
+  window.provider = new ethers.providers.Web3Provider(walletProvider)
+  window.signer = window.provider.getSigner()
+  window.userAddress = state.address
+
+  console.log("Connected:", window.userAddress)
+  console.log("Admin:", window.ADMIN)s  
   
   // Referral  
   const refInput = document.getElementById("refLink")  
@@ -1363,12 +1366,16 @@ modal.subscribe(async (state) => {
   }  
   
   // Show Admin Panel
-if(typeof ADMIN !== "undefined"){
-  if(userAddress.toLowerCase() === ADMIN.toLowerCase()){
-    if(document.getElementById("adminPanel")){
-      document.getElementById("adminPanel").style.display = "block";
-    }
+if (
+  window.ADMIN &&
+  window.userAddress &&
+  window.userAddress.toLowerCase().trim() === window.ADMIN.toLowerCase().trim()
+) {
+  const panel = document.getElementById("adminPanel")
+  if (panel) {
+    panel.style.display = "block"
   }
+}
 }
   
   // Load  
