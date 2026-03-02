@@ -1224,12 +1224,11 @@ modal.subscribe(async (state) => {
       window.location.origin + "?ref=" + userAddress
   }
 
-  // Admin
-  if (typeof ADMIN !== "undefined") {
-    if (userAddress.toLowerCase() === ADMIN.toLowerCase()) {
-      const adminPanel = document.getElementById("adminPanel")
-      if (adminPanel) adminPanel.style.display = "block"
-    }
+  /// Show Admin Panel
+if(typeof ADMIN !== "undefined"){
+  if(userAddress.toLowerCase() === ADMIN.toLowerCase()){
+    if(document.getElementById("adminPanel")){
+      document.getElementById("adminPanel").style.display = "block";
   }
 
   // Load
