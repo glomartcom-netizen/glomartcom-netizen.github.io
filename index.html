@@ -43,86 +43,182 @@
 
 <body>
 
+<!-- ================= TOP BAR ================= -->
 <div class="topbar">
   <div class="logoWrap">
     <img src="https://i.ibb.co/HpqwGFqt/logo.png">
     <div class="logoText">DimeX Dashboard</div>
   </div>
-  <button class="connectBtn" id="connectBtn" onclick="connectWallet()">
+
+  <button class="connectBtn" onclick="connectWallet()">
     Connect Wallet
   </button>
 </div>
 
-<div class="container">
-  <div id="walletDisplay"></div>
-  <div id="status" style="margin-bottom:15px;color:gold;font-weight:bold;"></div>  
 
+<div class="container">
+
+  <!-- Wallet Info -->
+  <div id="walletDisplay"></div>
+  <div id="status" style="margin-bottom:15px;color:gold;font-weight:bold;"></div>
+
+  <!-- ================= STATS ================= -->
   <div class="statsSingle">
-    <div class="statRow"><div class="statLeft"><i class="fa-solid fa-wallet"></i><span class="statName">Total Stake</span></div><div class="statAmount" id="totalStake">0 DMX</div></div>
-    <div class="statRow"><div class="statLeft"><i class="fa-solid fa-bolt"></i><span class="statName">Daily Reward</span></div><div class="statAmount" id="dailyReward">0 DMX</div></div>
-    
-    <div class="statRow" style="border: 1px solid gold;">
-      <div class="statLeft"><i class="fa-solid fa-gauge-high"></i><span class="statName">Income Limit (4x)</span></div>
+
+    <div class="statRow">
+      <div class="statLeft">
+        <i class="fa-solid fa-wallet"></i>
+        <span class="statName">Total Stake</span>
+      </div>
+      <div class="statAmount" id="totalStake">0 DMX</div>
+    </div>
+
+    <div class="statRow">
+      <div class="statLeft">
+        <i class="fa-solid fa-bolt"></i>
+        <span class="statName">Daily Reward</span>
+      </div>
+      <div class="statAmount" id="dailyReward">0 DMX</div>
+    </div>
+
+    <div class="statRow" style="border:1px solid gold;">
+      <div class="statLeft">
+        <i class="fa-solid fa-gauge-high"></i>
+        <span class="statName">Income Limit (4x)</span>
+      </div>
       <div class="statAmount" id="incomeCap">0 / 0 DMX</div>
     </div>
 
-    <div class="statRow"><div class="statLeft"><i class="fa-solid fa-chart-line"></i><span class="statName">Total Earned</span></div><div class="statAmount" id="totalEarned">0 DMX</div></div>
-    <div class="statRow"><div class="statLeft"><i class="fa-solid fa-user-plus"></i><span class="statName">Direct Income</span></div><div class="statAmount" id="directIncome">0 DMX</div></div>
-    <div class="statRow"><div class="statLeft"><i class="fa-solid fa-sitemap"></i><span class="statName">Level Income</span></div><div class="statAmount" id="levelIncome">0 DMX</div></div>
-    <div class="statRow"><div class="statLeft"><i class="fa-solid fa-users"></i><span class="statName">Team Volume</span></div><div class="statAmount" id="teamVolume">0 DMX</div></div>
-    <div class="statRow"><div class="statLeft"><i class="fa-solid fa-chart-simple"></i><span class="statName">Direct Volume</span></div><div class="statAmount" id="directVolume">0 DMX</div></div>
+    <div class="statRow">
+      <div class="statLeft">
+        <i class="fa-solid fa-chart-line"></i>
+        <span class="statName">Total Earned</span>
+      </div>
+      <div class="statAmount" id="totalEarned">0 DMX</div>
+    </div>
+
+    <div class="statRow">
+      <div class="statLeft">
+        <i class="fa-solid fa-user-plus"></i>
+        <span class="statName">Direct Income</span>
+      </div>
+      <div class="statAmount" id="directIncome">0 DMX</div>
+    </div>
+
+    <!-- LEVEL INCOME + UNLOCK -->
+    <div class="statRow">
+      <div class="statLeft">
+        <i class="fa-solid fa-sitemap"></i>
+        <span class="statName">Level Income</span>
+      </div>
+      <div style="text-align:right;">
+        <div class="statAmount" id="levelIncome">0 DMX</div>
+        <div style="font-size:12px;color:#aaa;margin-top:4px;">
+          Unlock:
+          <span id="levelUnlockRemaining" style="color:gold;">--</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="statRow">
+      <div class="statLeft">
+        <i class="fa-solid fa-users"></i>
+        <span class="statName">Team Volume</span>
+      </div>
+      <div class="statAmount" id="teamVolume">0 DMX</div>
+    </div>
+
+    <div class="statRow">
+      <div class="statLeft">
+        <i class="fa-solid fa-chart-simple"></i>
+        <span class="statName">Direct Volume</span>
+      </div>
+      <div class="statAmount" id="directVolume">0 DMX</div>
+    </div>
+
   </div>
 
+
+  <!-- ================= GRID ================= -->
   <div class="grid">
+
+    <!-- Stake Card -->
     <div class="card">
       <h3><i class="fa-solid fa-coins"></i> Stake</h3>
-      <select id="token"><option value="USDT">USDT BEP20</option><option value="DMX">DMX</option></select>
+
+      <select id="token">
+        <option value="USDT">USDT BEP20</option>
+        <option value="DMX">DMX</option>
+      </select>
+
       <input id="amount" placeholder="Enter amount">
+
       <select id="duration">
         <option value="" disabled selected>Select Duration</option>
-        <option value="90">90 Days (0.20%)</option>
-        <option value="180">180 Days (0.25%)</option>
-        <option value="365">365 Days (0.30%)</option>
+        <option value="90">90 Days</option>
+        <option value="180">180 Days</option>
+        <option value="365">365 Days</option>
       </select>
+
       <button id="approveBtn" onclick="approveToken()">Approve</button>
       <button id="stakeBtn" onclick="stakeToken()">Stake</button>
     </div>
-      
+
+
+    <!-- Claim Card -->
     <div class="card">
       <h3><i class="fa-solid fa-gift"></i> Claim</h3>
-      <input id="claimable" readonly style="color:gold; font-weight:bold;">
+
+      <input id="claimable" readonly style="color:gold;font-weight:bold;">
       <button id="claimBtn" onclick="claim()">Claim</button>
-      <button id="restakeBtn" onclick="restake()" style="background: linear-gradient(90deg, #ffd700, #fff);">Restake (+5% Bonus)</button>
+      <button id="restakeBtn" onclick="restake()">Restake (+5% Bonus)</button>
     </div>
 
+
+    <!-- Referral -->
     <div class="card">
       <h3><i class="fa-solid fa-link"></i> Referral</h3>
       <input id="refLink" readonly>
       <button onclick="copyRef()">Copy Link</button>
     </div>
 
+
+    <!-- Team -->
     <div class="card">
       <h3><i class="fa-solid fa-sitemap"></i> Team</h3>
       <button onclick="openDownline()">View Downline</button>
       <button onclick="openHistory()">Claim History</button>
+      <button onclick="openStakeHistory()">Stake History</button>
     </div>
+
   </div>
 
-  <div id="adminPanel" class="card adminPanel">
-    <h3><i class="fa-solid fa-user-shield"></i> Admin Panel</h3>
-    <input id="manualPrice" placeholder="Manual DMX Price (USDT)">
-    <button onclick="setManualPrice()">Set Price</button>
-    <button onclick="togglePriceMode()">Toggle Live/Manual</button>
+
+  <!-- ================= CONTRACT LINKS ================= -->
+  <div class="contractRow">
+    <span>DMX Token</span>
+    <button onclick="viewAddress(DMX)">View</button>
   </div>
-  
-<div class="contractRow"><span>DMX Token</span><button onclick="viewAddress(DMX)">View</button></div>
-<div class="contractRow"><span>Staking</span><button onclick="viewAddress(STAKING_ADDRESS)">View</button></div>
-<div class="contractRow"><span>LP Pair</span><button onclick="viewAddress(LP)">View</button></div>
-<div class="contractRow"><span>Router</span><button onclick="viewAddress(ROUTER)">View</button></div>
+
+  <div class="contractRow">
+    <span>Staking Contract</span>
+    <button onclick="viewAddress(STAKING_ADDRESS)">View</button>
+  </div>
+
+  <div class="contractRow">
+    <span>LP Pair</span>
+    <button onclick="viewAddress(LP)">View</button>
+  </div>
+
+  <div class="contractRow">
+    <span>Router</span>
+    <button onclick="viewAddress(ROUTER)">View</button>
+  </div>
+
 </div>
   
 <!-- ================= ADMIN PANEL START ================= -->
-<div class="adminPanel" id="adminPanel">
+<div id="adminPanel" class="adminPanel">
   <div class="card">
 
     <div style="
@@ -141,14 +237,14 @@
       Full Admin Control Panel
     </h3>
 
-<!-- 🔥 LIVE PRICE DISPLAY -->
-<div style="margin-bottom:15px;color:#aaa;font-size:14px;">
-🔥 Current DMX Price:
-<span id="livePriceAdmin" style="color:gold;">--</span><br>
-Mode:
-<span id="priceModeAdmin" style="color:gold;">--</span>
-</div>
-    
+    <!-- 🔥 LIVE PRICE DISPLAY -->
+    <div style="margin-bottom:15px;color:#aaa;font-size:14px;">
+      🔥 Current DMX Price:
+      <span id="livePriceAdmin" style="color:gold;">--</span><br>
+      Mode:
+      <span id="priceModeAdmin" style="color:gold;">--</span>
+    </div>
+
     <!-- Pause -->
     <button onclick="pauseStaking()">Pause Staking</button>
     <button onclick="unpauseStaking()">Unpause Staking</button>
@@ -269,9 +365,8 @@ Mode:
  </div> 
  
 <script>
-let provider, signer, userAddress;
+let provider, signer, useraddress 
   
-window.ADMIN="0x53ba2d865be750d0e2d4d01bcb0a46ec1684c46b";
 const USDT="0x55d398326f99059fF775485246999027B3197955";
 const DMX="PUT_DMX_TOKEN";
 const STAKING_ADDRESS="PUT_STAKING_CONTRACT";
@@ -618,6 +713,10 @@ function updateLevelUnlockTimer(expiry){
   
  async function loadLivePrice(){
   try{
+
+    if (!provider) return;
+    if (!STAKING_ADDRESS || STAKING_ADDRESS.includes("PUT")) return;
+
     const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, provider);
 
     const price = await c.getDMXPrice();
@@ -625,15 +724,26 @@ function updateLevelUnlockTimer(expiry){
 
     const formatted = ethers.utils.formatUnits(price,18) + " USDT";
 
-    // User side
-    document.getElementById("livePriceUser").innerHTML = formatted;
-    document.getElementById("priceModeUser").innerHTML =
+    // User side (SAFE CHECK)
+    const userPrice = document.getElementById("livePriceUser");
+    const userMode  = document.getElementById("priceModeUser");
+
+    if(userPrice) userPrice.innerHTML = formatted;
+    if(userMode) userMode.innerHTML =
+      manual ? "Manual" : "Pancake Live";
+
+    // Admin side (SAFE CHECK)
+    const adminPrice = document.getElementById("livePriceAdmin");
+    const adminMode  = document.getElementById("priceModeAdmin");
+
+    if(adminPrice) adminPrice.innerHTML = formatted;
+    if(adminMode) adminMode.innerHTML =
       manual ? "Manual" : "Pancake Live";
 
   }catch(e){
-    console.log(e);
+    console.log("Live Price Error:", e);
   }
-  } 
+}
 
 /* ================= ADMIN FUNCTIONS ================= */
 
@@ -1017,50 +1127,68 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
   
 </script>
 
+
+<!-- LOAD ETHERS ONLY ONCE -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+
+<!-- ================= WALLET MODULE ================= -->
 <script type="module">
-  import { createAppKit } from 'https://esm.run/@reown/appkit'
-  import { Ethers5Adapter } from 'https://esm.run/@reown/appkit-adapter-ethers5'
-  import { bsc } from 'https://esm.run/@reown/appkit/networks'
-  import { ethers } from 'https://esm.run/ethers@5.7.2'
 
-  const modal = createAppKit({
-    adapters: [new Ethers5Adapter()],
-    networks: [bsc],
-    metadata: {
-      name: 'DimeX Dashboard',
-      url: window.location.origin,
-      icons: ['https://i.ibb.co/HpqwGFqt/logo.png']
-    },
-    projectId: 'f9471d926852cbae4eb35a8b39c69bf9'
-  });
+import { createAppKit } from 'https://esm.run/@reown/appkit'
+import { Ethers5Adapter } from 'https://esm.run/@reown/appkit-adapter-ethers5'
+import { bsc } from 'https://esm.run/@reown/appkit/networks'
 
-  window.connectWallet = async () => {
-    await modal.open();
-  };
+window.ADMIN = "0x53ba2d865be750d0e2d4d01bcb0a46ec1684c46b"
 
-  modal.subscribe(async (state) => {
-    if (!state?.address) return;
+const modal = createAppKit({
+  adapters:[new Ethers5Adapter()],
+  networks:[bsc],
+  metadata:{
+    name:'DimeX Dashboard',
+    url:window.location.origin,
+    icons:['https://i.ibb.co/HpqwGFqt/logo.png']
+  },
+  projectId:'f9471d926852cbae4eb35a8b39c69bf9'
+})
 
-    window.userAddress = state.address;
+window.connectWallet = async () => {
+  await modal.open()
+}
 
-    const walletProvider = await modal.getProvider();
-    window.provider = new ethers.providers.Web3Provider(walletProvider);
-    window.signer = window.provider.getSigner();
+modal.subscribe(async (state)=>{
 
-    document.getElementById("walletDisplay").innerHTML =
-      `Connected: ${window.userAddress.slice(0,6)}...${window.userAddress.slice(-4)}<br>Network: BSC Mainnet (56)`;
+  if(!state?.address) return
 
-    if (window.userAddress.toLowerCase() === window.ADMIN.toLowerCase()) {
-      document.querySelectorAll(".adminPanel")
-        .forEach(el => el.style.display = "block");
-    }
+  window.userAddress = state.address
 
-    document.getElementById("refLink").value =
-      window.location.origin + "?ref=" + window.userAddress;
+  const walletProvider = await modal.getProvider()
 
-    loadData();
-  });
+  window.provider = new ethers.providers.Web3Provider(walletProvider)
+  window.signer = window.provider.getSigner()
+
+  document.getElementById("walletDisplay").innerHTML =
+    `Connected: ${state.address.slice(0,6)}...${state.address.slice(-4)}<br>Network: BSC (56)`
+
+  if(window.ADMIN &&
+     state.address.toLowerCase() === window.ADMIN.toLowerCase()){
+
+    document.querySelectorAll(".adminPanel")
+      .forEach(el=>el.style.display="block")
+  }
+
+  const refInput = document.getElementById("refLink")
+  if(refInput){
+    refInput.value =
+      window.location.origin + "?ref=" + state.address
+  }
+
+  if(typeof loadData === "function"){
+    loadData()
+  }
+
+})
+
 </script>
-
 </body>
 </html>
