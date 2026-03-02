@@ -202,7 +202,6 @@
   </div>
   
 <div class="card">
-<div class="card">
 <h3><i class="fa-solid fa-network-wired"></i> Ecosystem</h3>
 
 <div style="margin-bottom:15px;font-size:14px;color:#aaa;">
@@ -505,6 +504,7 @@ async function approveToken(){
 
   disable("approveBtn", false);
 }
+  
 async function stakeToken(){
 
   try{
@@ -581,9 +581,13 @@ async function stakeToken(){
     await tx.wait();
 
     document.getElementById("status").innerHTML = "Stake Successful";
-    alert("Stake Successful");
+alert("Stake Successful");
 
-    loadData();
+setTimeout(() => {
+  document.getElementById("status").innerHTML = "";
+}, 4000);
+
+loadData();
 
   } catch(e){
     console.log(e);
@@ -630,9 +634,13 @@ async function claim(){
     await tx.wait();
 
     document.getElementById("status").innerHTML = "Claim Successful";
-    alert("Claim Successful");
+alert("Claim Successful");
 
-    loadData();
+setTimeout(() => {
+  document.getElementById("status").innerHTML = "";
+}, 4000);
+
+loadData();
 
   }catch(e){
     console.log(e);
@@ -681,12 +689,14 @@ async function restake() {
     let tx = await c.restake();
     await tx.wait();
 
-    document.getElementById("status").innerHTML =
-      "Re-stake Successful";
+    document.getElementById("status").innerHTML = "Re-stake Successful";
+alert("Re-stake Successful! 5% Extra Bonus Added.");
 
-    alert("Re-stake Successful! 5% Extra Bonus Added.");
+setTimeout(() => {
+  document.getElementById("status").innerHTML = "";
+}, 4000);
 
-    loadData();
+loadData();
 
   } catch (e) {
     console.log(e);
@@ -752,18 +762,17 @@ function updateLevelUnlockTimer(expiry, directVolume){
 
   try{
 
-    // ✅ Proper provider check
     if (!window.provider) return;
     if (!STAKING_ADDRESS || STAKING_ADDRESS.includes("PUT")) return;
 
     const c = new ethers.Contract(
       STAKING_ADDRESS,
       STAKE_ABI,
-      window.provider   // ✅ FIXED
+      window.provider
     );
 
+    // 🔥 Get Price
     const price = await c.getDMXPrice();
-
     const formatted =
       ethers.utils.formatUnits(price,18) + " USDT";
 
@@ -772,6 +781,17 @@ function updateLevelUnlockTimer(expiry, directVolume){
 
     if(userPrice){
       userPrice.innerHTML = formatted;
+    }
+
+    // 🔥 Get Price Mode (ADD THIS PART)
+    const manual = await c.manualPriceEnabled();
+
+    const modeEl =
+      document.getElementById("priceModeUser");
+
+    if(modeEl){
+      modeEl.innerHTML =
+        manual ? "Manual" : "Pancake Live";
     }
 
   }catch(e){
