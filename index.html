@@ -463,7 +463,7 @@ async function approveToken(){
     disable("approveBtn", true);
 
     // ✅ Wallet check
-    if(!window.walletConnected){
+    if(!window.provider || !window.signer || !window.userAddress){
       alert("Connect wallet first");
       disable("approveBtn", false);
       return;
@@ -512,7 +512,7 @@ async function stakeToken(){
     disable("stakeBtn", true);
 
     // ✅ FIXED CHECK
-    if(!window.walletConnected){
+    if(!window.provider || !window.signer || !window.userAddress){
       alert("Connect wallet first");
       disable("stakeBtn", false);
       return;
@@ -604,7 +604,7 @@ async function claim(){
     disable("claimBtn", true);
 
     // ✅ FIXED CHECK
-    if(!window.walletConnected){
+    if(!window.provider || !window.signer || !window.userAddress){
       alert("Connect wallet first");
       disable("claimBtn", false);
       return;
@@ -802,7 +802,7 @@ function updateLevelUnlockTimer(expiry, directVolume){
 async function openDownline(){
 
   // ✅ Proper wallet check
-  if(!window.walletConnected){
+  if(!window.provider || !window.signer || !window.userAddress){
     alert("Connect wallet first");
     return;
   }
@@ -870,7 +870,7 @@ async function openDownline(){
 async function openHistory(){
 
   // ✅ Proper wallet check
-  if(!window.walletConnected){
+  if(!window.provider || !window.signer || !window.userAddress){
     alert("Connect wallet first");
     return;
   }
@@ -949,7 +949,7 @@ async function openHistory(){
 async function openStakeHistory(){
 
   // ✅ Proper wallet check
-  if(!window.walletConnected){
+  if(!window.provider || !window.signer || !window.userAddress){
     alert("Connect wallet first");
     return;
   }
@@ -1072,57 +1072,58 @@ modal.subscribe(async (state) => {
   // 🔴 If disconnected
   if (!state?.address) {
 
-    window.walletConnected = false   // ✅ ADD THIS
+    window.walletConnected = false;
+    window.provider = null;
+    window.signer = null;
+    window.userAddress = null;
 
-    window.provider = null
-    window.signer = null
-    window.userAddress = null
+    const walletDiv = document.getElementById("walletDisplay");
+    if(walletDiv) walletDiv.innerHTML = "";
 
-    const walletDiv = document.getElementById("walletDisplay")
-    if(walletDiv) walletDiv.innerHTML = ""
-
-    if(refreshInterval) clearInterval(refreshInterval)
-    return
+    return;
   }
 
-  const walletProvider = await modal.getProvider()
+  // 🟢 If connected
+  const walletProvider = await modal.getProvider();
 
-  window.provider = new ethers.providers.Web3Provider(walletProvider)
-  window.signer = window.provider.getSigner()
-  window.userAddress = state.address
-  window.walletConnected = true
+  window.provider = new ethers.providers.Web3Provider(walletProvider);
+  window.signer = window.provider.getSigner();
+  window.userAddress = state.address;
 
-  console.log("Connected:", window.userAddress)
+  // 🔎 Network check
+  const network = await window.provider.getNetwork();
 
-  // 🟢 Optional: Chain check
-  const network = await window.provider.getNetwork()
-  if(network.chainId !== 56){
-    alert("Please switch to BSC Mainnet")
-    return
+  if (network.chainId !== 56) {
+    alert("Please switch to BSC Mainnet");
+    window.walletConnected = false;
+    return;
   }
 
-  // Wallet UI
-  const walletDiv = document.getElementById("walletDisplay")
+  // ✅ Set true ONLY after everything ready
+  window.walletConnected = true;
+
+  // Wallet UI update
+  const walletDiv = document.getElementById("walletDisplay");
   if(walletDiv){
     walletDiv.innerHTML =
       "Connected: " +
       window.userAddress.slice(0,6) + "..." +
       window.userAddress.slice(-4) +
-      "<br><br>Network: BSC Mainnet (56)"
+      "<br><br>Network: BSC Mainnet (56)";
   }
 
-  // Referral
-  const refInput = document.getElementById("refLink")
+  // Referral link update
+  const refInput = document.getElementById("refLink");
   if (refInput) {
     const baseUrl =
-      window.location.origin + window.location.pathname
+      window.location.origin + window.location.pathname;
     refInput.value =
-      baseUrl + "?ref=" + window.userAddress
+      baseUrl + "?ref=" + window.userAddress;
   }
 
-  // Load dashboard once
-  if(typeof loadData === "function") await loadData()
-  if(typeof loadLivePrice === "function") await loadLivePrice()
+  // Load dashboard
+  if(typeof loadData === "function") await loadData();
+  if(typeof loadLivePrice === "function") await loadLivePrice();
 
   // 🔁 Clear old interval
   if(refreshInterval) clearInterval(refreshInterval)
