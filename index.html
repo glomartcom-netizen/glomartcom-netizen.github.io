@@ -7,7 +7,6 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
   
 <style>
   /* All your existing CSS remains exactly as you provided */
@@ -51,9 +50,9 @@
     <div class="logoText">DimeX Dashboard</div>
   </div>
 
-  <button class="connectBtn" onclick="connectWallet()">
-    Connect Wallet
-  </button>
+ <button class="connectBtn" id="connectBtn">
+  Connect Wallet
+</button>
 </div>
 
 
@@ -1187,9 +1186,10 @@ const modal = createAppKit({
   projectId:'059cc242b0cc96ac9665c598b76ddc7b'
 })
 
-window.connectWallet = async () => {
-  await modal.open()
-}
+document.getElementById("connectBtn")
+  .addEventListener("click", async () => {
+    await modal.open();
+  });
 
 modal.subscribe(async (state)=>{
 
