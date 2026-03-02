@@ -464,7 +464,7 @@ async function approveToken(){
     disable("approveBtn", true);
 
     // ✅ Wallet check
-    if(!window.provider || !window.signer){
+    if(!window.walletConnected){
       alert("Connect wallet first");
       disable("approveBtn", false);
       return;
@@ -512,7 +512,7 @@ async function stakeToken(){
     disable("stakeBtn", true);
 
     // ✅ FIXED CHECK
-    if(!window.provider || !window.signer){
+    if(!window.walletConnected){
       alert("Connect wallet first");
       disable("stakeBtn", false);
       return;
@@ -600,7 +600,7 @@ async function claim(){
     disable("claimBtn", true);
 
     // ✅ FIXED CHECK
-    if(!window.provider || !window.signer){
+    if(!window.walletConnected){
       alert("Connect wallet first");
       disable("claimBtn", false);
       return;
@@ -782,7 +782,7 @@ function updateLevelUnlockTimer(expiry, directVolume){
 async function openDownline(){
 
   // ✅ Proper wallet check
-  if(!window.provider || !window.userAddress){
+  if(!window.walletConnected){
     alert("Connect wallet first");
     return;
   }
@@ -850,7 +850,7 @@ async function openDownline(){
 async function openHistory(){
 
   // ✅ Proper wallet check
-  if(!window.provider || !window.userAddress){
+  if(!window.walletConnected){
     alert("Connect wallet first");
     return;
   }
@@ -929,7 +929,7 @@ async function openHistory(){
 async function openStakeHistory(){
 
   // ✅ Proper wallet check
-  if(!window.provider || !window.userAddress){
+  if(!window.walletConnected){
     alert("Connect wallet first");
     return;
   }
@@ -1043,6 +1043,7 @@ window.openConnectModal = () => modal.open()
 window.provider = null
 window.signer = null
 window.userAddress = null
+window.walletConnected = false
 
 let refreshInterval = null
 
@@ -1050,6 +1051,9 @@ modal.subscribe(async (state) => {
 
   // 🔴 If disconnected
   if (!state?.address) {
+
+    window.walletConnected = false   // ✅ ADD THIS
+
     window.provider = null
     window.signer = null
     window.userAddress = null
@@ -1066,6 +1070,7 @@ modal.subscribe(async (state) => {
   window.provider = new ethers.providers.Web3Provider(walletProvider)
   window.signer = window.provider.getSigner()
   window.userAddress = state.address
+  window.walletConnected = true
 
   console.log("Connected:", window.userAddress)
 
