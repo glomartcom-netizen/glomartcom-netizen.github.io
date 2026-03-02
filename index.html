@@ -202,33 +202,35 @@
   </div>
   
 <div class="card">
+<div class="card">
 <h3><i class="fa-solid fa-network-wired"></i> Ecosystem</h3>
-  
- <div style="margin-bottom:15px;font-size:14px;color:#aaa;">
+
+<div style="margin-bottom:15px;font-size:14px;color:#aaa;">
 🔥 Live DMX Price:
 <span id="livePriceUser" style="color:gold;">--</span><br>
 Mode:
-<span id="priceModeUser" style="color:g
+<span id="priceModeUser" style="color:gold;">--</span>
+</div>
 
-  <div class="contractRow">
-    <span>DMX Token</span>
-    <button onclick="viewAddress(DMX)">View</button>
-  </div>
+<div class="contractRow">
+  <span>DMX Token</span>
+  <button onclick="viewAddress(DMX)">View</button>
+</div>
 
-  <div class="contractRow">
-    <span>Staking Contract</span>
-    <button onclick="viewAddress(STAKING_ADDRESS)">View</button>
-  </div>
+<div class="contractRow">
+  <span>Staking Contract</span>
+  <button onclick="viewAddress(STAKING_ADDRESS)">View</button>
+</div>
 
-  <div class="contractRow">
-    <span>LP Pair</span>
-    <button onclick="viewAddress(LP)">View</button>
-  </div>
+<div class="contractRow">
+  <span>LP Pair</span>
+  <button onclick="viewAddress(LP)">View</button>
+</div>
 
-  <div class="contractRow">
-    <span>Router</span>
-    <button onclick="viewAddress(ROUTER)">View</button>
-  </div>
+<div class="contractRow">
+  <span>Router</span>
+  <button onclick="viewAddress(ROUTER)">View</button>
+</div>
 
 </div>
   
@@ -257,7 +259,6 @@ Mode:
  </div> 
  
 <script>
-let provider, signer, useraddress 
   
 const USDT="0x55d398326f99059fF775485246999027B3197955";
 const DMX="PUT_DMX_TOKEN";
@@ -639,14 +640,6 @@ function updateLevelUnlockTimer(expiry, directVolume){
 
     if(userPrice) userPrice.innerHTML = formatted;
     if(userMode) userMode.innerHTML =
-      manual ? "Manual" : "Pancake Live";
-
-    // Admin side (SAFE CHECK)
-    const adminPrice = document.getElementById("livePriceAdmin");
-    const adminMode  = document.getElementById("priceModeAdmin");
-
-    if(adminPrice) adminPrice.innerHTML = formatted;
-    if(adminMode) adminMode.innerHTML =
       manual ? "Manual" : "Pancake Live";
 
   }catch(e){
