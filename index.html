@@ -444,26 +444,29 @@ function seconds(d){return Number(d)*86400;}
   
 // --- DATA LOADING & 4X CAP ---
 async function loadData() {
-  if (!window.userAddress || !window.provider) return;
-
-  try {
-    const contract = new ethers.Contract(
-      STAKING_ADDRESS,
-      STAKE_ABI,
-      window.provider
-    );
+    if (!window.userAddress || !window.provider) return;
+    try {
+        const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, window.provider);
 
     const info = await contract.getUserInfo(window.userAddress);
     const claimable = await contract.getClaimable(window.userAddress);
     const directVol = await contract.directVolume(window.userAddress);
+    const levelExpiry = await contract.getLevelUnlockExpiry(window.userAddress);
 
     let staked = parseFloat(ethers.utils.formatUnits(info[0], 18));
     let earned = parseFloat(ethers.utils.formatUnits(info[2], 18));
+    
+     // 🔥 4X INCOME CAP LOGIC
+        let cap = staked * 4;
+        document.getElementById("incomeCap").innerHTML = `${earned.toFixed(2)} / ${cap.toFixed(2)} DMX`;
 
-    let cap = staked * 4;
-
-    document.getElementById("incomeCap").innerHTML =
-      `${earned.toFixed(2)} / ${cap.toFixed(2)} DMX`;
+        if (earned >= cap && cap > 0) {
+            document.getElementById("claimBtn").disabled = true;
+            document.getElementById("claimBtn").innerText = "4X LIMIT REACHED";
+            document.getElementById("status").innerHTML = "⚠️ 400% Limit Reached. Restake to continue.";
+        } else {
+            document.getElementById("claimBtn").disabled = false;
+        }
 
     document.getElementById("totalStake").innerHTML =
       staked.toFixed(2) + " DMX";
@@ -489,19 +492,36 @@ async function loadData() {
     document.getElementById("claimable").value =
       ethers.utils.formatUnits(claimable, 18) + " DMX";
 
-    if (earned >= cap && cap > 0) {
-      document.getElementById("claimBtn").disabled = true;
-      document.getElementById("claimBtn").innerText = "4X LIMIT REACHED";
-    } else {
-      document.getElementById("claimBtn").disabled = false;
-      document.getElementById("claimBtn").innerText = "Claim";
-    }
+    /* ===== LEVEL UNLOCK LOGIC ===== */
+
+    const directVolumeDMX = parseFloat(
+  ethers.utils.formatUnits(directVol,18)
+);
+
+const required = 10000; // change if needed
+
+const now = Math.floor(Date.now()/1000);
+const expiry = Number(levelExpiry);
+
+if(directVolumeDMX < required){
+  document.getElementById("levelUnlockStatus").innerHTML =
+    "Locked – Need 10,000 Direct Volume";
+}
+else if(expiry > now){
+  const daysLeft = Math.floor((expiry - now)/86400);
+  document.getElementById("levelUnlockStatus").innerHTML =
+    `Active (${daysLeft} Days Left)`;
+}
+else{
+  document.getElementById("levelUnlockStatus").innerHTML =
+    "Expired – Renew 10,000 Direct";
+}
 
   } catch (e) {
     console.log("LoadData Error:", e);
   }
 }
-
+  
 async function approveToken(){
 try{
 disable("approveBtn",true);
@@ -687,24 +707,41 @@ async function restake() {
 
 let levelUnlockInterval;
 
-function updateLevelUnlockTimer(expiry){
+function updateLevelUnlockTimer(expiry, directVolume){
 
   if(levelUnlockInterval) clearInterval(levelUnlockInterval);
+
+  const required = 10000; // Direct requirement
 
   function tick(){
 
     const now = Math.floor(Date.now()/1000);
-    const diff = Number(expiry) - now;
+    const expiryTime = Number(expiry);
 
-    if(diff <= 0){
-      document.getElementById("levelUnlockRemaining").innerHTML = "Expired";
+    // ❌ Not enough direct volume
+    if(directVolume < required){
+      document.getElementById("levelUnlockRemaining").innerHTML =
+        "Locked – Need 10,000 Direct";
+      clearInterval(levelUnlockInterval);
       return;
     }
 
+    const diff = expiryTime - now;
+
+    // ❌ Expired
+    if(diff <= 0){
+      document.getElementById("levelUnlockRemaining").innerHTML =
+        "Expired – Renew 10,000 Direct";
+      clearInterval(levelUnlockInterval);
+      return;
+    }
+
+    // ✅ Active
     const days = Math.floor(diff / 86400);
+    const hours = Math.floor((diff % 86400) / 3600);
 
     document.getElementById("levelUnlockRemaining").innerHTML =
-      days + " Days";
+      `Active (${days} Days ${hours} Hrs Left)`;
   }
 
   tick();
