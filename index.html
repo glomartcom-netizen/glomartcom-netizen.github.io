@@ -1013,7 +1013,7 @@ function viewAddress(addr){
 
 <!-- ================= WALLET MODULE ================= -->
 <script type="module">
-  
+
 import { createAppKit } from 'https://esm.sh/@reown/appkit'
 import { Ethers5Adapter } from 'https://esm.sh/@reown/appkit-adapter-ethers5'
 import { bsc } from 'https://esm.sh/@reown/appkit/networks'
@@ -1034,20 +1034,32 @@ const modal = createAppKit({
   adapters: [new Ethers5Adapter()],
   networks: [bsc],
   metadata,
-  projectId,
-  features: { analytics: true }
+  projectId
 })
 
 window.openConnectModal = () => modal.open()
 
-// Make globals
+// Globals
 window.provider = null
 window.signer = null
 window.userAddress = null
 
+let refreshInterval = null
+
 modal.subscribe(async (state) => {
 
-  if (!state?.address) return
+  // 🔴 If disconnected
+  if (!state?.address) {
+    window.provider = null
+    window.signer = null
+    window.userAddress = null
+
+    const walletDiv = document.getElementById("walletDisplay")
+    if(walletDiv) walletDiv.innerHTML = ""
+
+    if(refreshInterval) clearInterval(refreshInterval)
+    return
+  }
 
   const walletProvider = await modal.getProvider()
 
@@ -1057,7 +1069,14 @@ modal.subscribe(async (state) => {
 
   console.log("Connected:", window.userAddress)
 
-  // Wallet display
+  // 🟢 Optional: Chain check
+  const network = await window.provider.getNetwork()
+  if(network.chainId !== 56){
+    alert("Please switch to BSC Mainnet")
+    return
+  }
+
+  // Wallet UI
   const walletDiv = document.getElementById("walletDisplay")
   if(walletDiv){
     walletDiv.innerHTML =
@@ -1070,27 +1089,29 @@ modal.subscribe(async (state) => {
   // Referral
   const refInput = document.getElementById("refLink")
   if (refInput) {
-    const baseUrl = window.location.origin + window.location.pathname
-    refInput.value = baseUrl + "?ref=" + window.userAddress
+    const baseUrl =
+      window.location.origin + window.location.pathname
+    refInput.value =
+      baseUrl + "?ref=" + window.userAddress
   }
 
-  // Load dashboard
-  setTimeout(async () => {
+  // Load dashboard once
+  if(typeof loadData === "function") await loadData()
+  if(typeof loadLivePrice === "function") await loadLivePrice()
 
-    if(typeof loadData === "function") await loadData()
-    if(typeof loadLivePrice === "function") await loadLivePrice()
-    if(typeof loadRates === "function") await loadRates()
+  // 🔁 Clear old interval
+  if(refreshInterval) clearInterval(refreshInterval)
 
-    setInterval(() => {
-      if(window.userAddress){
-        loadData()
-        loadLivePrice()
-      }
-    }, 30000)
-
-  }, 800)
+  // Auto refresh every 30s
+  refreshInterval = setInterval(() => {
+    if(window.userAddress){
+      loadData()
+      loadLivePrice()
+    }
+  }, 30000)
 
 })
+
 </script>
 </body>
 </html>
