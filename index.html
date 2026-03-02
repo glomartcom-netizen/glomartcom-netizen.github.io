@@ -1226,15 +1226,16 @@ modal.subscribe(async (state) => {
     refInput.value = baseUrl + "?ref=" + window.userAddress;
   }
 
-  // ===== ADMIN CHECK =====
-  if (
-    typeof ADMIN !== "undefined" &&
-    window.userAddress &&
-    window.userAddress.trim().toLowerCase() === ADMIN.trim().toLowerCase()
-  ) {
-    document.getElementById("adminPanel").style.display = "block";
-    console.log("ADMIN MODE ACTIVATED");
+  // ===== SHOW ADMIN PANEL =====
+if (
+  window.userAddress &&
+  window.userAddress.toLowerCase() === ADMIN.toLowerCase()
+) {
+  const panel = document.getElementById("adminPanel");
+  if (panel) {
+    panel.style.display = "block";
   }
+}
   
   // Load
   if(typeof loadData === "function"){  
