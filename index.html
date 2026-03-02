@@ -1172,6 +1172,7 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
 import { createAppKit } from 'https://esm.run/@reown/appkit'
 import { Ethers5Adapter } from 'https://esm.run/@reown/appkit-adapter-ethers5'
 import { bsc } from 'https://esm.run/@reown/appkit/networks'
+import { ethers } from 'https://esm.run/ethers@5.7.2'
 
 window.ADMIN = "0x53ba2d865be750d0e2d4d01bcb0a46ec1684c46b"
 
@@ -1209,12 +1210,6 @@ modal.subscribe(async (state)=>{
 
     document.querySelectorAll(".adminPanel")
       .forEach(el=>el.style.display="block")
-  }
-
-  const refInput = document.getElementById("refLink")
-  if(refInput){
-    refInput.value =
-      window.location.origin + "?ref=" + state.address
   }
 
   if(typeof loadData === "function"){
