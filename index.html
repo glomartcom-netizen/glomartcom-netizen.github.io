@@ -1199,69 +1199,86 @@ const modal = createAppKit({
   features: { analytics: true }
 })
 
+// Open modal from button
 window.openConnectModal = () => modal.open()
 
-// ===== CONNECT TO DASHBOARD =====
+// ===== GLOBAL VARIABLES =====
+window.provider = null
+window.signer = null
+window.userAddress = null
 
-let provider
-let signer
-let userAddress
-
+// ===== WALLET SUBSCRIBE =====
 modal.subscribe(async (state) => {
 
-  if (!state?.address) return;
+  if (!state?.address) return
 
-  const walletProvider = await modal.getProvider();
+  const walletProvider = await modal.getProvider()
 
-  window.provider = new ethers.providers.Web3Provider(walletProvider);
-  window.signer = window.provider.getSigner();
-  window.userAddress = state.address;
+  // Make global
+  window.provider = new ethers.providers.Web3Provider(walletProvider)
+  window.signer = window.provider.getSigner()
+  window.userAddress = state.address
 
-  console.log("Connected:", window.userAddress);
+  console.log("Connected:", window.userAddress)
+
+  // ===== WALLET DISPLAY =====
+  const walletDiv = document.getElementById("walletDisplay")
+  if(walletDiv){
+    walletDiv.innerHTML =
+      "Connected: " +
+      window.userAddress.slice(0,6) + "..." +
+      window.userAddress.slice(-4) +
+      "<br><br>Network: BSC Mainnet (56)"
+  }
 
   // ===== REFERRAL LINK =====
-  const refInput = document.getElementById("refLink");
-  if (refInput && window.userAddress) {
-    const baseUrl = window.location.origin + window.location.pathname;
-    refInput.value = baseUrl + "?ref=" + window.userAddress;
+  const refInput = document.getElementById("refLink")
+  if (refInput) {
+    const baseUrl = window.location.origin + window.location.pathname
+    refInput.value = baseUrl + "?ref=" + window.userAddress
   }
 
-  // ===== SHOW ADMIN PANEL =====
-if (
-  window.userAddress &&
-  window.userAddress.toLowerCase() === ADMIN.toLowerCase()
-) {
-  const panel = document.getElementById("adminPanel");
-  if (panel) {
-    panel.style.display = "block";
+  // ===== ADMIN CHECK =====
+  if (
+    typeof ADMIN !== "undefined" &&
+    window.userAddress.toLowerCase() === ADMIN.toLowerCase()
+  ) {
+    const panel = document.getElementById("adminPanel")
+    if(panel){
+      panel.style.display = "block"
+      console.log("ADMIN MODE ACTIVATED")
+    }
+  } else {
+    const panel = document.getElementById("adminPanel")
+    if(panel){
+      panel.style.display = "none"
+    }
   }
-}
-  
-  // Load
-  if(typeof loadData === "function"){  
 
-    setTimeout(async () => {  
+  // ===== LOAD DASHBOARD DATA =====
+  setTimeout(async () => {
 
+    if(typeof loadData === "function"){
       await loadData()
+    }
 
-      if(typeof loadLivePrice === "function"){  
-        await loadLivePrice()  
+    if(typeof loadLivePrice === "function"){
+      await loadLivePrice()
+    }
+
+    if(typeof loadRates === "function"){
+      await loadRates()
+    }
+
+    // Auto refresh every 30 sec
+    setInterval(() => {
+      if(window.userAddress){
+        loadData()
+        loadLivePrice()
       }
+    }, 30000)
 
-      if(typeof loadRates === "function"){  
-        await loadRates()  
-      }
-
-      setInterval(() => {  
-        if(userAddress){  
-          loadData()  
-          loadLivePrice()  
-        }  
-      }, 30000)
-
-    }, 800)
-
-  }
+  }, 800)
 
 })
 
