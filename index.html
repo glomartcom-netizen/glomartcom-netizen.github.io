@@ -259,7 +259,6 @@ Mode:
 <script>
 let provider, signer, useraddress 
   
-const ADMIN = "0x53ba2d865be750d0e2d4d01bcb0a46ec1684c46b";  
 const USDT="0x55d398326f99059fF775485246999027B3197955";
 const DMX="PUT_DMX_TOKEN";
 const STAKING_ADDRESS="PUT_STAKING_CONTRACT";
@@ -289,32 +288,11 @@ const STAKE_ABI = [
 
   // ===== PRICE SYSTEM =====
   "function getDMXPrice() view returns(uint256)",
-  "function manualPriceEnabled() view returns(bool)",
-  "function setManualPrice(uint256) external",
-  "function toggleManualPrice(bool) external",
-
-  // ===== ADMIN CONTROL =====
-  "function pauseStaking() external",
-  "function unpauseStaking() external",
 
   // ===== REWARD RATE =====
-  "function setRewardRate(uint256,uint256) external",
   "function rewardRates(uint256) view returns(uint256)",
 
-  // ===== MINIMUM =====
-  "function setMinimumUSDT(uint256) external",
-  "function setMinimumDMX(uint256) external",
-
-  // ===== EMERGENCY =====
-  "function emergencyWithdrawToken(address,uint256) external",
-
-  // ===== TREASURY & OWNERSHIP =====
-  "function setTreasury(address) external",
-  "function transferOwnership(address) external",
-
   // ===== REFERRAL SYSTEM =====
-  "function setDirectPercent(uint256) external",
-  "function setLevelPercent(uint256,uint256) external",
   "function getLevelCount(address,uint256) view returns(uint256)",
   "function getLevelUsers(address,uint256) view returns((address,uint256,uint256)[])",
 
