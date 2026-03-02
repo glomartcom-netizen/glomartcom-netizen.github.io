@@ -1209,28 +1209,31 @@ let userAddress
 
 modal.subscribe(async (state) => {
 
-  if (!state?.address) return
+  if (!state?.address) return;
 
-  const walletProvider = await modal.getProvider()
+  const walletProvider = await modal.getProvider();
 
-  window.provider = new ethers.providers.Web3Provider(walletProvider)
-  window.signer = window.provider.getSigner()
-  window.userAddress = state.address
+  window.provider = new ethers.providers.Web3Provider(walletProvider);
+  window.signer = window.provider.getSigner();
+  window.userAddress = state.address;
 
-  console.log("Connected:", window.userAddress)
+  console.log("Connected:", window.userAddress);
 
-  // Referral
-  const refInput = document.getElementById("refLink")
-  if (refInput) {
-    refInput.value =
-      window.location.origin + "?ref=" + userAddress
+  // ===== REFERRAL LINK =====
+  const refInput = document.getElementById("refLink");
+  if (refInput && window.userAddress) {
+    const baseUrl = window.location.origin + window.location.pathname;
+    refInput.value = baseUrl + "?ref=" + window.userAddress;
   }
 
-  // Admin  
-if (typeof ADMIN !== "undefined") {
-    if (window.userAddress.toLowerCase() === ADMIN.toLowerCase()) {
-      document.getElementById("adminPanel").style.display = "block"
-    }
+  // ===== ADMIN CHECK =====
+  if (
+    typeof ADMIN !== "undefined" &&
+    window.userAddress &&
+    window.userAddress.trim().toLowerCase() === ADMIN.trim().toLowerCase()
+  ) {
+    document.getElementById("adminPanel").style.display = "block";
+    console.log("ADMIN MODE ACTIVATED");
   }
   
   // Load
