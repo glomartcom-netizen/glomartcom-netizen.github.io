@@ -1238,22 +1238,22 @@ modal.subscribe(async (state) => {
     refInput.value = baseUrl + "?ref=" + window.userAddress
   }
 
-  // ===== ADMIN CHECK =====
-  if (
-    typeof ADMIN !== "undefined" &&
-    window.userAddress.toLowerCase() === ADMIN.toLowerCase()
-  ) {
-    const panel = document.getElementById("adminPanel")
-    if(panel){
-      panel.style.display = "block"
-      console.log("ADMIN MODE ACTIVATED")
-    }
-  } else {
-    const panel = document.getElementById("adminPanel")
-    if(panel){
-      panel.style.display = "none"
+    // ===== ADMIN CHECK (REVISED) =====
+  const panel = document.getElementById("adminPanel");
+  
+  if (panel && window.userAddress) {
+    const isOwner = window.userAddress.toLowerCase() === ADMIN.toLowerCase();
+    
+    if (isOwner) {
+      panel.style.display = "block";
+      panel.style.visibility = "visible"; // Extra insurance
+      console.log("✅ Admin access granted for:", window.userAddress);
+    } else {
+      panel.style.display = "none";
+      console.log("❌ Regular user connected.");
     }
   }
+
 
   // ===== LOAD DASHBOARD DATA =====
   setTimeout(async () => {
