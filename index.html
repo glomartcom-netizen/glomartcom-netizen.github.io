@@ -1213,9 +1213,11 @@ modal.subscribe(async (state) => {
 
   const walletProvider = await modal.getProvider()
 
-  provider = new ethers.providers.Web3Provider(walletProvider)
-  signer = provider.getSigner()
-  userAddress = state.address
+  window.provider = new ethers.providers.Web3Provider(walletProvider)
+  window.signer = window.provider.getSigner()
+  window.userAddress = state.address
+
+  console.log("Connected:", window.userAddress)
 
   // Referral
   const refInput = document.getElementById("refLink")
@@ -1225,12 +1227,11 @@ modal.subscribe(async (state) => {
   }
 
   // Admin  
-  if (typeof ADMIN !== "undefined") {  
-    if (userAddress.toLowerCase() === ADMIN.toLowerCase()) {  
-      const adminPanel = document.getElementById("adminPanel")  
-      if (adminPanel) adminPanel.style.display = "block"  
-    }  
-  }  
+if (typeof ADMIN !== "undefined") {
+    if (window.userAddress.toLowerCase() === ADMIN.toLowerCase()) {
+      document.getElementById("adminPanel").style.display = "block"
+    }
+  }
   
   // Load
   if(typeof loadData === "function"){  
