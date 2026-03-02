@@ -200,9 +200,16 @@
     </div>
 
   </div>
+  
+<div class="card">
+<h3><i class="fa-solid fa-network-wired"></i> Ecosystem</h3>
+  
+ <div style="margin-bottom:15px;font-size:14px;color:#aaa;">
+🔥 Live DMX Price:
+<span id="livePriceUser" style="color:gold;">--</span><br>
+Mode:
+<span id="priceModeUser" style="color:g
 
-
-  <!-- ================= CONTRACT LINKS ================= -->
   <div class="contractRow">
     <span>DMX Token</span>
     <button onclick="viewAddress(DMX)">View</button>
@@ -224,129 +231,6 @@
   </div>
 
 </div>
-  
-<!-- ================= ADMIN PANEL START ================= -->
-<div id="adminPanel" class="adminPanel">
-  <div class="card">
-
-    <div style="
-      background:#111;
-      border:1px solid gold;
-      padding:8px 12px;
-      border-radius:8px;
-      margin-bottom:15px;
-      color:gold;
-      font-size:13px;">
-      ✔ Admin Wallet Connected
-    </div>
-
-    <h3>
-      <i class="fa-solid fa-user-shield"></i>
-      Full Admin Control Panel
-    </h3>
-
-    <!-- 🔥 LIVE PRICE DISPLAY -->
-    <div style="margin-bottom:15px;color:#aaa;font-size:14px;">
-      🔥 Current DMX Price:
-      <span id="livePriceAdmin" style="color:gold;">--</span><br>
-      Mode:
-      <span id="priceModeAdmin" style="color:gold;">--</span>
-    </div>
-
-    <!-- Pause -->
-    <button onclick="pauseStaking()">Pause Staking</button>
-    <button onclick="unpauseStaking()">Unpause Staking</button>
-
-    <hr style="margin:20px 0;border-color:#333;">
-
-    <!-- ===== PLAN REWARD RATES ===== -->
-    <h4 style="color:gold;">Plan Reward Rates</h4>
-
-    <div>
-      90 Days Current: <span id="rate90" style="color:gold;">--</span>
-    </div>
-    <input id="rateInput90" placeholder="New % for 90 Days">
-    <button onclick="updatePlanRate(90)">Update 90 Days</button>
-
-    <hr style="margin:15px 0;border-color:#222;">
-
-    <div>
-      180 Days Current: <span id="rate180" style="color:gold;">--</span>
-    </div>
-    <input id="rateInput180" placeholder="New % for 180 Days">
-    <button onclick="updatePlanRate(180)">Update 180 Days</button>
-
-    <hr style="margin:15px 0;border-color:#222;">
-
-    <div>
-      365 Days Current: <span id="rate365" style="color:gold;">--</span>
-    </div>
-    <input id="rateInput365" placeholder="New % for 365 Days">
-    <button onclick="updatePlanRate(365)">Update 365 Days</button>
-
-    <hr style="margin:20px 0;border-color:#333;">
-
-    <!-- Minimum Stake -->
-    <h4 style="color:gold;">Update Minimum Stake</h4>
-    <input id="minUSDT" placeholder="New Minimum USDT">
-    <button onclick="updateMinUSDT()">Update USDT</button>
-
-    <input id="minDMX" placeholder="New Minimum DMX">
-    <button onclick="updateMinDMX()">Update DMX</button>
-
-    <hr style="margin:20px 0;border-color:#333;">
-
-    <!-- Emergency Withdraw -->
-    <h4 style="color:gold;">Emergency Withdraw</h4>
-    <select id="withdrawToken">
-      <option value="USDT">USDT</option>
-      <option value="DMX">DMX</option>
-    </select>
-    <input id="withdrawAmount" placeholder="Amount">
-    <button onclick="emergencyWithdraw()">Withdraw</button>
-
-    <hr style="margin:20px 0;border-color:#333;">
-
-    <!-- Treasury -->
-    <h4 style="color:gold;">Change Treasury Wallet</h4>
-    <input id="newTreasury" placeholder="New Treasury Address">
-    <button onclick="updateTreasury()">Update Treasury</button>
-
-    <hr style="margin:20px 0;border-color:#333;">
-
-    <!-- Ownership -->
-    <h4 style="color:gold;">Transfer Ownership</h4>
-    <input id="newOwner" placeholder="New Owner Address">
-    <button onclick="transferOwner()">Transfer Ownership</button>
-
-    <hr style="margin:20px 0;border-color:#333;">
-
-    <!-- Direct & Level -->
-    <h4 style="color:gold;">Update Direct Bonus %</h4>
-    <input id="directPercent" placeholder="New Direct Percent">
-    <button onclick="updateDirect()">Update Direct</button>
-
-    <h4 style="color:gold;margin-top:15px;">Update Level Bonus %</h4>
-    <input id="levelNumber" placeholder="Level (1-25)">
-    <input id="levelPercent" placeholder="New Percent">
-    <button onclick="updateLevel()">Update Level</button>
-
-    <hr style="margin:20px 0;border-color:#333;">
-
-    <!-- DMX Price -->
-    <h4 style="color:gold;">DMX Price Control</h4>
-    <input id="manualPrice" placeholder="DMX price in USDT (0.25)">
-    <button onclick="setManualPrice()">Set Manual Price</button>
-
-    <select id="priceMode">
-      <option value="true">Enable Manual Price</option>
-      <option value="false">Use Live Pancake Price</option>
-    </select>
-    <button onclick="togglePriceMode()">Update Price Mode</button>
-
-  </div>
-</div>
-<!-- ================= ADMIN PANEL END ================= -->
   
 <div class="popup" id="downlinePopup">
 <div class="popupBox">
