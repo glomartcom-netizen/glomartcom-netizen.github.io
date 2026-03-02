@@ -16,7 +16,15 @@
   .logoWrap{display:flex;align-items:center;gap:12px;}
   .logoWrap img{width:45px}
   .logoText{color:gold;font-size:22px;font-weight:600;letter-spacing:1px;}
-  .connectBtn{background:linear-gradient(90deg,#ffd700,#ffb700);color:#000;border:none;padding:12px 22px;border-radius:10px;font-weight:bold;cursor:pointer;font-size:14px;}
+  .connect-btn {
+  background-color: #f1b80d;
+  color: black;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  }
   .container{max-width:1250px;margin:auto;padding:30px 20px;}
   #walletDisplay{margin-bottom:20px;color:gold;font-size:14px;}
   .statsSingle{display:flex;flex-direction:column;gap:14px;margin-bottom:30px;}
@@ -50,11 +58,12 @@
     <div class="logoText">DimeX Dashboard</div>
   </div>
 
- <button class="connectBtn" id="connectBtn">
-  Connect Wallet
-</button>
-</div>
+<button class="connect-btn" onclick="openConnectModal()">Connect Wallet</button>
+</nav>
 
+<div style="text-align:center;margin-top:50px;">
+  <appkit-button></appkit-button>
+</div>
 
 <div class="container">
 
@@ -1168,52 +1177,85 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
 <!-- ================= WALLET MODULE ================= -->
 <script type="module">
 
-import { createAppKit } from 'https://esm.run/@reown/appkit'
-import { Ethers5Adapter } from 'https://esm.run/@reown/appkit-adapter-ethers5'
-import { bsc } from 'https://esm.run/@reown/appkit/networks'
-import { ethers } from 'https://esm.run/ethers@5.7.2'
+import { createAppKit } from 'https://esm.sh/@reown/appkit'
+import { Ethers5Adapter } from 'https://esm.sh/@reown/appkit-adapter-ethers5'
+import { bsc } from 'https://esm.sh/@reown/appkit/networks'
+import { ethers } from 'https://esm.sh/ethers@5.7.2'
 
-window.ADMIN = "0x53ba2d865be750d0e2d4d01bcb0a46ec1684c46b"
+const projectId = 'f9471d926852cbae4eb35a8b39c69bf9'
+
+const metadata = {
+  name: 'DimeX Staking',
+  description: 'DimeX Staking Protocol',
+  url: window.location.origin,
+  icons: ['https://your-website.com/logo.png']
+}
 
 const modal = createAppKit({
-  adapters:[new Ethers5Adapter()],
-  networks:[bsc],
-  metadata:{
-    name:'DimeX Dashboard',
-    url:window.location.origin,
-    icons:['https://i.ibb.co/HpqwGFqt/logo.png']
-  },
-  projectId:'059cc242b0cc96ac9665c598b76ddc7b'
+  adapters: [new Ethers5Adapter()],
+  networks: [bsc],
+  metadata,
+  projectId,
+  features: { analytics: true }
 })
 
-document.getElementById("connectBtn")
-  .addEventListener("click", async () => {
-    await modal.open();
-  });
+window.openConnectModal = () => modal.open()
 
-modal.subscribe(async (state)=>{
+// ===== CONNECT TO DASHBOARD =====
 
-  if(!state?.address) return
+let provider
+let signer
+let userAddress
 
-  window.userAddress = state.address
+modal.subscribe(async (state) => {
+
+  if (!state?.address) return
 
   const walletProvider = await modal.getProvider()
 
-  window.provider = new ethers.providers.Web3Provider(walletProvider)
-  window.signer = window.provider.getSigner()
+  provider = new ethers.providers.Web3Provider(walletProvider)
+  signer = provider.getSigner()
+  userAddress = state.address
 
-  document.getElementById("walletDisplay").innerHTML =
-    `Connected: ${state.address.slice(0,6)}...${state.address.slice(-4)}<br>Network: BSC (56)`
-
-  if(window.ADMIN &&
-     state.address.toLowerCase() === window.ADMIN.toLowerCase()){
-
-    document.querySelectorAll(".adminPanel")
-      .forEach(el=>el.style.display="block")
+  // Referral
+  const refInput = document.getElementById("refLink")
+  if (refInput) {
+    refInput.value =
+      window.location.origin + "?ref=" + userAddress
   }
 
-  if(typeof loadData === "function"){
-    loadData()
+  // Admin
+  if (typeof ADMIN !== "undefined") {
+    if (userAddress.toLowerCase() === ADMIN.toLowerCase()) {
+      const adminPanel = document.getElementById("adminPanel")
+      if (adminPanel) adminPanel.style.display = "block"
+    }
+  }
+
+  // Load
+  if(typeof loadData === "function"){  
+
+    setTimeout(async () => {  
+
+      await loadData()
+
+      if(typeof loadLivePrice === "function"){  
+        await loadLivePrice()  
+      }
+
+      if(typeof loadRates === "function"){  
+        await loadRates()  
+      }
+
+      setInterval(() => {  
+        if(userAddress){  
+          loadData()  
+          loadLivePrice()  
+        }  
+      }, 30000)
+
+    }, 800)
+
   }
 
 })
