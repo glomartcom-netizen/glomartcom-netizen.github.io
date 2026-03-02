@@ -449,10 +449,10 @@ async function loadData() {
     try {
         const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, window.provider);
 
-    const info = await contract.getUserInfo(window.userAddress);
-    const claimable = await contract.getClaimable(window.userAddress);
-    const directVol = await contract.directVolume(window.userAddress);
-    const levelExpiry = await contract.getLevelUnlockExpiry(window.userAddress);
+    const info = await c.getUserInfo(window.userAddress);
+    const claimable = await c.getClaimable(window.userAddress);
+    const directVol = await c.directVolume(window.userAddress);
+    const levelExpiry = await c.getLevelUnlockExpiry(window.userAddress);
 
     let staked = parseFloat(ethers.utils.formatUnits(info[0], 18));
     let earned = parseFloat(ethers.utils.formatUnits(info[2], 18));
