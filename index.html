@@ -1176,112 +1176,98 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
 
 <!-- ================= WALLET MODULE ================= -->
 <script type="module">
+// Use consistent ESM providers
+import { createAppKit } from 'https://esm.run/@reown/appkit'
+import { Ethers5Adapter } from 'https://esm.run/@reown/appkit-adapter-ethers5'
+import { bsc } from 'https://esm.run/@reown/appkit/networks'
 
-import { createAppKit } from 'https://esm.sh/@reown/appkit'
-import { Ethers5Adapter } from 'https://esm.sh/@reown/appkit-adapter-ethers5'
-import { bsc } from 'https://esm.sh/@reown/appkit/networks'
-import { ethers } from 'https://esm.sh/ethers@5.7.2'
-
-const projectId = 'f9471d926852cbae4eb35a8b39c69bf9'
+// 1. Get your own ID at cloud.reown.com
+const projectId = 'f9471d926852cbae4eb35a8b39c69bf9'; 
 
 const metadata = {
   name: 'DimeX Staking',
   description: 'DimeX Staking Protocol',
   url: window.location.origin,
-  icons: ['https://your-website.com/logo.png']
+  icons: ['https://i.ibb.co/HpqwGFqt/logo.png']
 }
 
+// 2. Initialize AppKit
 const modal = createAppKit({
   adapters: [new Ethers5Adapter()],
   networks: [bsc],
   metadata,
   projectId,
-  features: { analytics: true }
+  features: { 
+    analytics: true,
+    email: false, // Set to true if you want social logins
+    socials: [] 
+  }
 })
 
-// Open modal from button
-window.openConnectModal = () => modal.open()
-
-// ===== GLOBAL VARIABLES =====
-window.provider = null
-window.signer = null
-window.userAddress = null
-
-// ===== WALLET SUBSCRIBE =====
-modal.subscribe(async (state) => {
-
-  if (!state?.address) return
-
-  const walletProvider = await modal.getProvider()
-
-  // Make global
-  window.provider = new ethers.providers.Web3Provider(walletProvider)
-  window.signer = window.provider.getSigner()
-  window.userAddress = state.address
-
-  console.log("Connected:", window.userAddress)
-
-  // ===== WALLET DISPLAY =====
-  const walletDiv = document.getElementById("walletDisplay")
-  if(walletDiv){
-    walletDiv.innerHTML =
-      "Connected: " +
-      window.userAddress.slice(0,6) + "..." +
-      window.userAddress.slice(-4) +
-      "<br><br>Network: BSC Mainnet (56)"
+// 3. IMPORTANT: Map the button function to the modal
+window.openConnectModal = async () => {
+  try {
+    await modal.open();
+  } catch (err) {
+    console.error("Modal open error:", err);
   }
+};
 
-  // ===== REFERRAL LINK =====
-  const refInput = document.getElementById("refLink")
-  if (refInput) {
-    const baseUrl = window.location.origin + window.location.pathname
-    refInput.value = baseUrl + "?ref=" + window.userAddress
-  }
+// 4. Handle Account Updates
+modal.subscribeAccount(async (state) => {
+  if (state.isConnected && state.address) {
+    window.userAddress = state.address;
+    
+    // Get the provider from the modal
+    const walletProvider = modal.getWalletProvider();
+    
+    // Setup Global Ethers objects for your contract functions
+    window.provider = new ethers.providers.Web3Provider(walletProvider);
+    window.signer = window.provider.getSigner();
 
-  // ===== ADMIN CHECK =====
-  if (
-    typeof ADMIN !== "undefined" &&
-    window.userAddress.toLowerCase() === ADMIN.toLowerCase()
-  ) {
-    const panel = document.getElementById("adminPanel")
-    if(panel){
-      panel.style.display = "block"
-      console.log("ADMIN MODE ACTIVATED")
+    console.log("Connected to:", window.userAddress);
+
+    // Update UI
+    const walletDiv = document.getElementById("walletDisplay");
+    if(walletDiv){
+      walletDiv.innerHTML = `Connected: ${window.userAddress.slice(0,6)}...${window.userAddress.slice(-4)}<br>Network: BSC Mainnet`;
     }
+
+    // Update Referral Link
+    const refInput = document.getElementById("refLink");
+    if (refInput) {
+      refInput.value = window.location.origin + window.location.pathname + "?ref=" + window.userAddress;
+    }
+
+    // Admin Panel Logic
+    const panel = document.getElementById("adminPanel");
+    if (panel && typeof ADMIN !== "undefined") {
+      panel.style.display = (window.userAddress.toLowerCase() === ADMIN.toLowerCase()) ? "block" : "none";
+    }
+
+    // Trigger Data Refresh
+    refreshDashboard();
   } else {
-    const panel = document.getElementById("adminPanel")
-    if(panel){
-      panel.style.display = "none"
-    }
+    // Handle Disconnect
+    window.userAddress = null;
+    document.getElementById("walletDisplay").innerHTML = "Wallet Disconnected";
+    if(document.getElementById("adminPanel")) document.getElementById("adminPanel").style.display = "none";
   }
+});
 
-  // ===== LOAD DASHBOARD DATA =====
-  setTimeout(async () => {
+// Helper to run all your existing dashboard functions
+async function refreshDashboard() {
+  if(typeof loadData === "function") await loadData();
+  if(typeof loadLivePrice === "function") await loadLivePrice();
+  if(typeof loadRates === "function") await loadRates();
+}
 
-    if(typeof loadData === "function"){
-      await loadData()
-    }
-
-    if(typeof loadLivePrice === "function"){
-      await loadLivePrice()
-    }
-
-    if(typeof loadRates === "function"){
-      await loadRates()
-    }
-
-    // Auto refresh every 30 sec
-    setInterval(() => {
-      if(window.userAddress){
-        loadData()
-        loadLivePrice()
-      }
-    }, 30000)
-
-  }, 800)
-
-})
+// Refresh interval
+setInterval(() => {
+  if(window.userAddress) refreshDashboard();
+}, 30000);
 
 </script>
+
 </body>
 </html>
