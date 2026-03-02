@@ -316,79 +316,141 @@ function seconds(d){return Number(d)*86400;}
   
 // --- DATA LOADING & 4X CAP ---
 async function loadData() {
-    if (!window.userAddress || !window.provider) return;
-    try {
-        const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, window.provider);
 
-    const info = await c.getUserInfo(window.userAddress);
-    const claimable = await c.getClaimable(window.userAddress);
-    const directVol = await c.directVolume(window.userAddress);
+  if (!window.userAddress || !window.provider) return;
+  if (!STAKING_ADDRESS || STAKING_ADDRESS.includes("PUT")) return;
+
+  try {
+
+    const c = new ethers.Contract(
+      STAKING_ADDRESS,
+      STAKE_ABI,
+      window.provider
+    );
+
+    const info       = await c.getUserInfo(window.userAddress);
+    const claimable  = await c.getClaimable(window.userAddress);
+    const directVol  = await c.directVolume(window.userAddress);
     const levelExpiry = await c.getLevelUnlockExpiry(window.userAddress);
 
-    let staked = parseFloat(ethers.utils.formatUnits(info[0], 18));
-    let earned = parseFloat(ethers.utils.formatUnits(info[2], 18));
-    
-     // 🔥 4X INCOME CAP LOGIC
-        let cap = staked * 4;
-        document.getElementById("incomeCap").innerHTML = `${earned.toFixed(2)} / ${cap.toFixed(2)} DMX`;
+    const staked = parseFloat(
+      ethers.utils.formatUnits(info[0],18)
+    );
 
-        if (earned >= cap && cap > 0) {
-            document.getElementById("claimBtn").disabled = true;
-            document.getElementById("claimBtn").innerText = "4X LIMIT REACHED";
-            document.getElementById("status").innerHTML = "⚠️ 400% Limit Reached. Restake to continue.";
-        } else {
-            document.getElementById("claimBtn").disabled = false;
-        }
-      
-    // Update UI
-    document.getElementById("totalStake").innerHTML =
-      staked.toFixed(2) + " DMX";
+    const daily = parseFloat(
+      ethers.utils.formatUnits(info[1],18)
+    );
 
-    document.getElementById("dailyReward").innerHTML =
-      ethers.utils.formatUnits(info[1], 18) + " DMX";
+    const earned = parseFloat(
+      ethers.utils.formatUnits(info[2],18)
+    );
 
-    document.getElementById("totalEarned").innerHTML =
-      earned.toFixed(2) + " DMX";
+    const directIncome = parseFloat(
+      ethers.utils.formatUnits(info[3],18)
+    );
 
-    document.getElementById("directIncome").innerHTML =
-      ethers.utils.formatUnits(info[3], 18) + " DMX";
+    const levelIncome = parseFloat(
+      ethers.utils.formatUnits(info[4],18)
+    );
 
-    document.getElementById("levelIncome").innerHTML =
-      ethers.utils.formatUnits(info[4], 18) + " DMX";
-
-    document.getElementById("teamVolume").innerHTML =
-      ethers.utils.formatUnits(info[5], 18) + " DMX";
-
-    document.getElementById("directVolume").innerHTML =
-      ethers.utils.formatUnits(directVol, 18) + " DMX";
-
-    document.getElementById("claimable").value =
-      ethers.utils.formatUnits(claimable, 18) + " DMX";
-
-    /* ===== LEVEL UNLOCK LOGIC ===== */
+    const teamVolume = parseFloat(
+      ethers.utils.formatUnits(info[5],18)
+    );
 
     const directVolumeDMX = parseFloat(
-  ethers.utils.formatUnits(directVol,18)
-);
+      ethers.utils.formatUnits(directVol,18)
+    );
 
-const required = 10000; // change if needed
+    const claimableAmount = parseFloat(
+      ethers.utils.formatUnits(claimable,18)
+    );
 
-const now = Math.floor(Date.now()/1000);
-const expiry = Number(levelExpiry);
+    /* ================= 4X CAP ================= */
 
-if(directVolumeDMX < required){
-  document.getElementById("levelUnlockRemaining").innerHTML =
-    "Locked – Need 10,000 Direct Volume";
-}
-else if(expiry > now){
-  const daysLeft = Math.floor((expiry - now)/86400);
-  document.getElementById("levelUnlockRemaining").innerHTML =
-    `Active (${daysLeft} Days Left)`;
-}
-else{
-  document.getElementById("levelUnlockRemaining").innerHTML =
-    "Expired – Renew 10,000 Direct";
-}
+    const cap = staked * 4;
+
+    const incomeCapEl = document.getElementById("incomeCap");
+    if(incomeCapEl){
+      incomeCapEl.innerHTML =
+        `${earned.toFixed(2)} / ${cap.toFixed(2)} DMX`;
+    }
+
+    const claimBtn = document.getElementById("claimBtn");
+
+    if (earned >= cap && cap > 0) {
+
+      if(claimBtn){
+        claimBtn.disabled = true;
+        claimBtn.innerText = "4X LIMIT REACHED";
+      }
+
+      const status = document.getElementById("status");
+      if(status){
+        status.innerHTML =
+          "⚠️ 400% Income Limit Reached.<br>Add New Stake or Restake to Continue.";
+      }
+
+    } else {
+
+      if(claimBtn){
+        claimBtn.disabled = false;
+        claimBtn.innerText = "Claim";
+      }
+
+    }
+
+    /* ================= UI UPDATE ================= */
+
+    const set = (id, value) => {
+      const el = document.getElementById(id);
+      if(el) el.innerHTML = value;
+    };
+
+    set("totalStake",  staked.toFixed(2) + " DMX");
+    set("dailyReward", daily.toFixed(2) + " DMX");
+    set("totalEarned", earned.toFixed(2) + " DMX");
+    set("directIncome", directIncome.toFixed(2) + " DMX");
+    set("levelIncome", levelIncome.toFixed(2) + " DMX");
+    set("teamVolume", teamVolume.toFixed(2) + " DMX");
+    set("directVolume", directVolumeDMX.toFixed(2) + " DMX");
+
+    const claimInput = document.getElementById("claimable");
+    if(claimInput){
+      claimInput.value =
+        claimableAmount.toFixed(2) + " DMX";
+    }
+
+    /* ================= LEVEL UNLOCK ================= */
+
+    const required = 10000;
+    const now = Math.floor(Date.now()/1000);
+    const expiry = Number(levelExpiry);
+
+    const unlockEl =
+      document.getElementById("levelUnlockRemaining");
+
+    if(unlockEl){
+
+      if(directVolumeDMX < required){
+
+        unlockEl.innerHTML =
+          "Locked – Need 10,000 Direct Volume";
+
+      } else if(expiry > now){
+
+        const daysLeft =
+          Math.floor((expiry - now)/86400);
+
+        unlockEl.innerHTML =
+          `Active (${daysLeft} Days Left)`;
+
+      } else {
+
+        unlockEl.innerHTML =
+          "Expired – Renew 10,000 Direct";
+
+      }
+    }
 
   } catch (e) {
     console.log("LoadData Error:", e);
@@ -396,27 +458,61 @@ else{
 }
   
 async function approveToken(){
-try{
-disable("approveBtn",true);
-let amt=document.getElementById("amount").value;
-if(!amt||isNaN(amt)) return alert("Invalid amount");
 
-let token=document.getElementById("token").value==="USDT"?USDT:DMX;
-let t=new ethers.Contract(token,ERC20_ABI,signer);
-let tx=await t.approve(STAKING_ADDRESS,ethers.utils.parseUnits(amt,18));
-await tx.wait();
-alert("Approved");
-}catch(e){alert(e.reason||e.message);}
-disable("approveBtn",false);
+  try{
+
+    disable("approveBtn", true);
+
+    // ✅ Wallet check
+    if(!window.provider || !window.signer){
+      alert("Connect wallet first");
+      disable("approveBtn", false);
+      return;
+    }
+
+    let amt = document.getElementById("amount").value;
+
+    if(!amt || isNaN(amt) || Number(amt) <= 0){
+      alert("Invalid amount");
+      disable("approveBtn", false);
+      return;
+    }
+
+    let token =
+      document.getElementById("token").value === "USDT"
+      ? USDT
+      : DMX;
+
+    const t = new ethers.Contract(
+      token,
+      ERC20_ABI,
+      window.signer   // ✅ FIXED
+    );
+
+    let tx = await t.approve(
+      STAKING_ADDRESS,
+      ethers.utils.parseUnits(amt,18)
+    );
+
+    await tx.wait();
+
+    alert("Approved");
+
+  }catch(e){
+    console.log(e);
+    alert(e.reason || e.message || "Approve Failed");
+  }
+
+  disable("approveBtn", false);
 }
-
 async function stakeToken(){
 
   try{
 
     disable("stakeBtn", true);
 
-    if(!provider){
+    // ✅ FIXED CHECK
+    if(!window.provider || !window.signer){
       alert("Connect wallet first");
       disable("stakeBtn", false);
       return;
@@ -432,7 +528,6 @@ async function stakeToken(){
 
     let tokenType = document.getElementById("token").value;
 
-    // ✅ Minimum Validation
     if(tokenType === "USDT" && Number(amt) < 25){
       alert("Minimum stake is 25 USDT");
       disable("stakeBtn", false);
@@ -453,20 +548,17 @@ async function stakeToken(){
       return;
     }
 
-    // ✅ Convert days → seconds
     let durationSeconds = Number(selectedDuration) * 86400;
 
-    const signer = provider.getSigner();
-
-    // ✅ Referral
-    let ref = new URLSearchParams(window.location.search)
-      .get("ref") || ethers.constants.AddressZero;
-
+    // ✅ USE window.signer (NOT provider.getSigner())
     const contract = new ethers.Contract(
       STAKING_ADDRESS,
       STAKE_ABI,
-      signer
+      window.signer
     );
+
+    let ref = new URLSearchParams(window.location.search)
+      .get("ref") || ethers.constants.AddressZero;
 
     document.getElementById("status").innerHTML = "Staking...";
 
@@ -489,40 +581,42 @@ async function stakeToken(){
     await tx.wait();
 
     document.getElementById("status").innerHTML = "Stake Successful";
-
     alert("Stake Successful");
 
     loadData();
 
   } catch(e){
-
     console.log(e);
     alert(e.reason || e.message || "Stake Failed");
-
   }
 
   disable("stakeBtn", false);
-}
-  
+  }
+
 async function claim(){
+
   try{
 
     disable("claimBtn", true);
 
-    if(!provider){
+    // ✅ FIXED CHECK
+    if(!window.provider || !window.signer){
       alert("Connect wallet first");
       disable("claimBtn", false);
       return;
     }
 
-    const signer = provider.getSigner();
-    const user = await signer.getAddress();
+    const c = new ethers.Contract(
+      STAKING_ADDRESS,
+      STAKE_ABI,
+      window.signer
+    );
 
-    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, signer);
-
-    let reward = await c.getClaimable(user);
-
-    let amount = Number(ethers.utils.formatUnits(reward,18));
+    // Optional: check minimum before claim
+    let reward = await c.getClaimable(window.userAddress);
+    let amount = Number(
+      ethers.utils.formatUnits(reward,18)
+    );
 
     if(amount < 100){
       alert("Minimum 100 DMX required to claim");
@@ -536,7 +630,6 @@ async function claim(){
     await tx.wait();
 
     document.getElementById("status").innerHTML = "Claim Successful";
-
     alert("Claim Successful");
 
     loadData();
@@ -552,48 +645,79 @@ async function claim(){
 // --- COMPLETE & FIXED DIMEX LOGIC ---
 
 async function restake() {
-    try {
-        disable("restakeBtn", true);
-        if (!window.signer) return alert("Connect wallet first");
 
-        const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, window.signer);
-        let claimable = await c.getClaimable(window.userAddress);
-        let amount = parseFloat(ethers.utils.formatUnits(claimable, 18));
+  try {
 
-        if (amount < 5000) {
-            alert("Minimum 5000 DMX required to Re-stake");
-            disable("restakeBtn", false);
-            return;
-        }
+    disable("restakeBtn", true);
 
-        document.getElementById("status").innerHTML = "Restaking with 5% Bonus...";
-        // This triggers the contract restake which should include the 5% incentive
-        let tx = await c.restake();
-        await tx.wait();
-        alert("Re-stake Successful! 5% Extra Bonus Added.");
-        loadData();
-    } catch (e) {
-        alert("Restake Failed: " + (e.reason || e.message));
+    // ✅ Proper wallet check
+    if (!window.provider || !window.signer || !window.userAddress) {
+      alert("Connect wallet first");
+      disable("restakeBtn", false);
+      return;
     }
-    disable("restakeBtn", false);
+
+    const c = new ethers.Contract(
+      STAKING_ADDRESS,
+      STAKE_ABI,
+      window.signer
+    );
+
+    let claimable = await c.getClaimable(window.userAddress);
+
+    let amount = parseFloat(
+      ethers.utils.formatUnits(claimable, 18)
+    );
+
+    if (amount < 5000) {
+      alert("Minimum 5000 DMX required to Re-stake");
+      disable("restakeBtn", false);
+      return;
+    }
+
+    document.getElementById("status").innerHTML =
+      "Restaking with 5% Bonus...";
+
+    let tx = await c.restake();
+    await tx.wait();
+
+    document.getElementById("status").innerHTML =
+      "Re-stake Successful";
+
+    alert("Re-stake Successful! 5% Extra Bonus Added.");
+
+    loadData();
+
+  } catch (e) {
+    console.log(e);
+    alert("Restake Failed: " + (e.reason || e.message));
+  }
+
+  disable("restakeBtn", false);
 }
 
 let levelUnlockInterval;
 
 function updateLevelUnlockTimer(expiry, directVolume){
 
-  if(levelUnlockInterval) clearInterval(levelUnlockInterval);
+  if(levelUnlockInterval){
+    clearInterval(levelUnlockInterval);
+  }
 
   const required = 10000; // Direct requirement
+  const element = document.getElementById("levelUnlockRemaining");
+
+  if(!element) return;
 
   function tick(){
 
-    const now = Math.floor(Date.now()/1000);
+    const now = Math.floor(Date.now() / 1000);
     const expiryTime = Number(expiry);
+    const volume = Number(directVolume);
 
     // ❌ Not enough direct volume
-    if(directVolume < required){
-      document.getElementById("levelUnlockRemaining").innerHTML =
+    if(volume < required){
+      element.innerHTML =
         "Locked – Need 10,000 Direct";
       clearInterval(levelUnlockInterval);
       return;
@@ -603,7 +727,7 @@ function updateLevelUnlockTimer(expiry, directVolume){
 
     // ❌ Expired
     if(diff <= 0){
-      document.getElementById("levelUnlockRemaining").innerHTML =
+      element.innerHTML =
         "Expired – Renew 10,000 Direct";
       clearInterval(levelUnlockInterval);
       return;
@@ -612,35 +736,43 @@ function updateLevelUnlockTimer(expiry, directVolume){
     // ✅ Active
     const days = Math.floor(diff / 86400);
     const hours = Math.floor((diff % 86400) / 3600);
+    const minutes = Math.floor((diff % 3600) / 60);
 
-    document.getElementById("levelUnlockRemaining").innerHTML =
-      `Active (${days} Days ${hours} Hrs Left)`;
+    element.innerHTML =
+      `Active (${days}D ${hours}H ${minutes}M)`;
   }
 
   tick();
-  levelUnlockInterval = setInterval(tick,1000);
+
+  // 🔥 Update every 60 seconds (not every 1 second)
+  levelUnlockInterval = setInterval(tick, 60000);
 }
   
  async function loadLivePrice(){
+
   try{
 
-    if (!provider) return;
+    // ✅ Proper provider check
+    if (!window.provider) return;
     if (!STAKING_ADDRESS || STAKING_ADDRESS.includes("PUT")) return;
 
-    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, provider);
+    const c = new ethers.Contract(
+      STAKING_ADDRESS,
+      STAKE_ABI,
+      window.provider   // ✅ FIXED
+    );
 
     const price = await c.getDMXPrice();
-    const manual = await c.manualPriceEnabled();
 
-    const formatted = ethers.utils.formatUnits(price,18) + " USDT";
+    const formatted =
+      ethers.utils.formatUnits(price,18) + " USDT";
 
-    // User side (SAFE CHECK)
-    const userPrice = document.getElementById("livePriceUser");
-    const userMode  = document.getElementById("priceModeUser");
+    const userPrice =
+      document.getElementById("livePriceUser");
 
-    if(userPrice) userPrice.innerHTML = formatted;
-    if(userMode) userMode.innerHTML =
-      manual ? "Manual" : "Pancake Live";
+    if(userPrice){
+      userPrice.innerHTML = formatted;
+    }
 
   }catch(e){
     console.log("Live Price Error:", e);
@@ -649,7 +781,8 @@ function updateLevelUnlockTimer(expiry, directVolume){
 
 async function openDownline(){
 
-  if(!provider || !userAddress){
+  // ✅ Proper wallet check
+  if(!window.provider || !window.userAddress){
     alert("Connect wallet first");
     return;
   }
@@ -658,22 +791,32 @@ async function openDownline(){
 
   try{
 
-    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, provider);
+    const c = new ethers.Contract(
+      STAKING_ADDRESS,
+      STAKE_ABI,
+      window.provider   // ✅ FIXED
+    );
 
     let html="";
 
     for(let level=1; level<=25; level++){
 
-      const count = await c.getLevelCount(userAddress, level);
+      const count = await c.getLevelCount(
+        window.userAddress,
+        level
+      );
 
-      if(count > 0){
+      if(Number(count) > 0){
 
         html += `
         <div style="margin-top:15px;color:gold">
           Level ${level} (Total: ${count})
         </div>`;
 
-        const users = await c.getLevelUsers(userAddress, level);
+        const users = await c.getLevelUsers(
+          window.userAddress,
+          level
+        );
 
         users.forEach(u => {
 
@@ -706,7 +849,8 @@ async function openDownline(){
   
 async function openHistory(){
 
-  if(!provider || !userAddress){
+  // ✅ Proper wallet check
+  if(!window.provider || !window.userAddress){
     alert("Connect wallet first");
     return;
   }
@@ -715,17 +859,23 @@ async function openHistory(){
 
   try{
 
-    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, provider);
+    const c = new ethers.Contract(
+      STAKING_ADDRESS,
+      STAKE_ABI,
+      window.provider   // ✅ FIXED
+    );
 
-    const filter = c.filters.Claimed(userAddress);
+    const filter = c.filters.Claimed(window.userAddress);
 
     const events = await c.queryFilter(filter);
 
     let html = "";
 
     if(events.length === 0){
+
       html = "No claim history found";
-    }else{
+
+    } else {
 
       events.reverse().forEach(e=>{
 
@@ -749,9 +899,7 @@ async function openHistory(){
             ${amount} DMX
           </strong><br>
 
-          <small>
-            Date: ${date}
-          </small><br>
+          <small>Date: ${date}</small><br>
 
           <small>
             Tx:
@@ -780,7 +928,8 @@ async function openHistory(){
 
 async function openStakeHistory(){
 
-  if(!provider || !userAddress){
+  // ✅ Proper wallet check
+  if(!window.provider || !window.userAddress){
     alert("Connect wallet first");
     return;
   }
@@ -789,19 +938,31 @@ async function openStakeHistory(){
 
   try{
 
-    const c = new ethers.Contract(STAKING_ADDRESS, STAKE_ABI, provider);
+    const c = new ethers.Contract(
+      STAKING_ADDRESS,
+      STAKE_ABI,
+      window.provider   // ✅ FIXED
+    );
 
-    const count = await c.getStakeCount(userAddress);
+    const count = await c.getStakeCount(window.userAddress);
 
     let html = "";
 
-    for(let i=0; i<count; i++){
+    for(let i=0; i<Number(count); i++){
 
-      const data = await c.getStakeInfo(userAddress, i);
+      const data = await c.getStakeInfo(
+        window.userAddress,
+        i
+      );
 
-      const amount = ethers.utils.formatUnits(data[0],18);
-      const startDate = new Date(data[1]*1000).toLocaleDateString();
-      const expiryDate = new Date(data[2]*1000).toLocaleDateString();
+      const amount =
+        ethers.utils.formatUnits(data[0],18);
+
+      const startDate =
+        new Date(Number(data[1]) * 1000).toLocaleDateString();
+
+      const expiryDate =
+        new Date(Number(data[2]) * 1000).toLocaleDateString();
 
       html += `
       <div style="border-bottom:1px solid #333;padding:10px 0">
@@ -820,25 +981,32 @@ async function openStakeHistory(){
     console.log(e);
 
     document.getElementById("stakeHistoryData").innerHTML =
-      "Contract not deployed or function not available";
+      "Unable to fetch stake history";
 
   }
 }
 
 function closePopup(){
-document.getElementById("downlinePopup").style.display="none";
-document.getElementById("historyPopup").style.display="none";
-document.getElementById("stakeHistoryPopup").style.display="none";  
+  document.getElementById("downlinePopup").style.display="none";
+  document.getElementById("historyPopup").style.display="none";
+  document.getElementById("stakeHistoryPopup").style.display="none";  
 }
   
 function copyRef(){
-navigator.clipboard.writeText(document.getElementById("refLink").value);
-alert("Copied");
+  navigator.clipboard.writeText(
+    document.getElementById("refLink").value
+  );
+  alert("Copied");
 }
 
 function viewAddress(addr){
-if(!addr||addr.includes("PUT")) return alert("Address not set");
-window.open("https://bscscan.com/address/"+addr,"_blank");
+  if(!addr || addr.includes("PUT"))
+    return alert("Address not set");
+
+  window.open(
+    "https://bscscan.com/address/" + addr,
+    "_blank"
+  );
 }
   
 </script>
