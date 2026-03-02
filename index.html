@@ -463,8 +463,8 @@ async function approveToken(){
     disable("approveBtn", true);
 
     // ✅ Wallet check
-    if (!window.walletConnected || !window.userAddress) {
-    alert("Wallet not detected! Please click 'Connect Wallet' again.");
+    if (!window.walletConnected) {
+    alert("Please connect your wallet first using the button at the top!");
     return;
     }
 
@@ -511,10 +511,10 @@ async function stakeToken(){
     disable("stakeBtn", true);
 
     // ✅ FIXED CHECK
-    if (!window.walletConnected || !window.userAddress) {
-    alert("Wallet not detected! Please click 'Connect Wallet' again.");
+    if (!window.walletConnected) {
+    alert("Please connect your wallet first using the button at the top!");
     return;
-    }
+}
 
     let amt = document.getElementById("amount").value;
 
@@ -602,10 +602,10 @@ async function claim(){
     disable("claimBtn", true);
 
     // ✅ FIXED CHECK
-    if (!window.walletConnected || !window.userAddress) {
-    alert("Wallet not detected! Please click 'Connect Wallet' again.");
+    if (!window.walletConnected) {
+    alert("Please connect your wallet first using the button at the top!");
     return;
-    }
+}
 
     const c = new ethers.Contract(
       STAKING_ADDRESS,
@@ -656,10 +656,10 @@ async function restake() {
     disable("restakeBtn", true);
 
     // ✅ Proper wallet check
-    if (!window.walletConnected || !window.userAddress) {
-    alert("Wallet not detected! Please click 'Connect Wallet' again.");
+    if (!window.walletConnected) {
+    alert("Please connect your wallet first using the button at the top!");
     return;
-    }
+}
 
     const c = new ethers.Contract(
       STAKING_ADDRESS,
@@ -798,10 +798,10 @@ function updateLevelUnlockTimer(expiry, directVolume){
 async function openDownline(){
 
   // ✅ Proper wallet check
-  if (!window.walletConnected || !window.userAddress) {
-    alert("Wallet not detected! Please click 'Connect Wallet' again.");
+  if (!window.walletConnected) {
+    alert("Please connect your wallet first using the button at the top!");
     return;
-  }
+}
 
   document.getElementById("downlinePopup").style.display="flex";
 
@@ -866,10 +866,10 @@ async function openDownline(){
 async function openHistory(){
 
   // ✅ Proper wallet check
-  if (!window.walletConnected || !window.userAddress) {
-    alert("Wallet not detected! Please click 'Connect Wallet' again.");
+  if (!window.walletConnected) {
+    alert("Please connect your wallet first using the button at the top!");
     return;
-  }
+}
 
   document.getElementById("historyPopup").style.display="flex";
 
@@ -945,10 +945,10 @@ async function openHistory(){
 async function openStakeHistory(){
 
   // ✅ Proper wallet check
-  if (!window.walletConnected || !window.userAddress) {
-    alert("Wallet not detected! Please click 'Connect Wallet' again.");
+  if (!window.walletConnected) {
+    alert("Please connect your wallet first using the button at the top!");
     return;
-  }
+}
 
   document.getElementById("stakeHistoryPopup").style.display="flex";
 
@@ -1055,34 +1055,26 @@ const modal = createAppKit({
 
 window.openConnectModal = () => modal.open()
 
-// Global State
+// Global initial state
+window.walletConnected = false;
+window.userAddress = null;
 window.provider = null;
 window.signer = null;
-window.userAddress = null;
-window.walletConnected = false;
 
 modal.subscribe(async (state) => {
 
-  // 🔴 DISCONNECTED
-  if (!state?.isConnected || !state?.address) {
-
+  // 🔴 If no address → disconnected
+  if (!state || !state.address) {
     window.walletConnected = false;
     window.provider = null;
     window.signer = null;
     window.userAddress = null;
-
-    const walletDiv = document.getElementById("walletDisplay");
-    if(walletDiv) walletDiv.innerHTML = "";
-
-    const status = document.getElementById("status");
-    if(status) status.innerHTML = "Wallet Disconnected";
-
+    console.log("Wallet Disconnected");
     return;
   }
 
   try {
 
-    // 🟢 CONNECTED
     const walletProvider = await modal.getProvider();
 
     window.provider = new ethers.providers.Web3Provider(walletProvider);
@@ -1092,16 +1084,16 @@ modal.subscribe(async (state) => {
     const network = await window.provider.getNetwork();
 
     if (network.chainId !== 56) {
-      alert("Please switch to BSC Mainnet in your wallet!");
+      alert("Please switch to BSC Mainnet");
       window.walletConnected = false;
       return;
     }
 
-    // ✅ SET TRUE ONLY AFTER EVERYTHING READY
+    // ✅ ONLY HERE set true
     window.walletConnected = true;
 
     console.log("Wallet Connected:", window.userAddress);
-
+    
     // UI Update
     const walletDiv = document.getElementById("walletDisplay");
     if(walletDiv){
@@ -1112,28 +1104,13 @@ modal.subscribe(async (state) => {
         "<br>Network: BSC Mainnet";
     }
 
-    const status = document.getElementById("status");
-    if(status) status.innerHTML = "🟢 Ready";
-
-    // Referral Link
-    const refInput = document.getElementById("refLink");
-    if(refInput){
-      refInput.value =
-        window.location.origin +
-        window.location.pathname +
-        "?ref=" +
-        window.userAddress;
-    }
-
-    // Load Dashboard
+    // Load data
     if(typeof loadData === "function") await loadData();
     if(typeof loadLivePrice === "function") await loadLivePrice();
 
   } catch (err) {
-
     console.error("Wallet Setup Error:", err);
     window.walletConnected = false;
-
   }
 
 });
